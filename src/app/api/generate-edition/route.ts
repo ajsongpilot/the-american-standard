@@ -102,8 +102,8 @@ async function callGrokWithSearch(
 
   if (!response.ok) {
     const error = await response.text();
-    console.error("Grok API error:", error);
-    throw new Error(`Grok API error: ${response.status}`);
+    console.error("Grok API error (with search):", response.status, error);
+    throw new Error(`Grok API error: ${response.status} - ${error.substring(0, 200)}`);
   }
 
   const data = (await response.json()) as GrokResponse;
@@ -138,8 +138,8 @@ async function callGrokBasic(
 
   if (!response.ok) {
     const error = await response.text();
-    console.error("Grok API error:", error);
-    throw new Error(`Grok API error: ${response.status}`);
+    console.error("Grok API error (basic):", response.status, error);
+    throw new Error(`Grok API error: ${response.status} - ${error.substring(0, 200)}`);
   }
 
   const data = (await response.json()) as GrokResponse;
