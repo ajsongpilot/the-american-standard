@@ -83,26 +83,39 @@ async function callGrokWithSearch(
   return data.choices[0]?.message?.content || "";
 }
 
-// PHASE 1: Get list of trending stories
+// PHASE 1: Get list of TODAY'S top stories
 async function getTrendingStories(): Promise<StoryTopic[]> {
-  console.log("Phase 1: Fetching trending stories...");
+  console.log("Phase 1: Fetching today's top stories...");
+
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
   const response = await callGrokWithSearch(
     [
       {
         role: "user",
-        content: `What are the top 12 trending political stories in America right now? 
+        content: `Today is ${today}. What are the top 12 political news stories happening RIGHT NOW or in the last 24-48 hours?
 
-Search X/Twitter and news sources. Include:
-- Major fraud investigations and scandals (federal probes, corruption)
-- Breaking political news and controversies
-- Stories generating significant public debate
-- Federal/state policy changes causing outrage or celebration
-- Political figures in the spotlight
+IMPORTANT: I want FRESH news - events that happened TODAY or YESTERDAY, not old stories from weeks or months ago.
+
+Search X/Twitter and news for:
+- Breaking news from the last 24-48 hours
+- New developments in ongoing stories (new charges filed, new statements made TODAY)
+- Press conferences, announcements, or events happening NOW
+- Fresh scandals, investigations, or controversies just emerging
+- Policy changes announced in the last 48 hours
+
+DO NOT include:
+- Events from weeks or months ago unless there's a NEW development TODAY
+- Old stories just because people are still discussing them
 
 For each story provide:
-1. A specific title (with names, places, numbers when relevant)
-2. A one-sentence description
+1. A specific title with what happened and WHEN (include "today", "yesterday", or specific recent date)
+2. A one-sentence description of the NEW development
 3. Category: "National Politics", "Washington Briefs", or "State & Local"
 
 Output as JSON only:
@@ -129,17 +142,26 @@ Output as JSON only:
 async function writeArticle(story: StoryTopic, isLead: boolean): Promise<RawArticle> {
   console.log(`Writing article: ${story.title}`);
 
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
   const response = await callGrokWithSearch(
     [
       {
         role: "system",
         content: `You are a newspaper journalist for The American Standard ("Clear. Fair. American.").
+Today's date is ${today}.
 
 WRITING STYLE:
 - Traditional newspaper voice, inverted pyramid structure
 - Say "Americans" not "users on X" or "social media users"
 - Quote real people by name or @handle to show public sentiment
 - Be specific: include names, dollar amounts, dates, locations
+- Focus on what happened TODAY or in the last 24-48 hours
 
 TONE:
 - Neutral and factual in reporting
@@ -152,18 +174,20 @@ TONE:
 
 ${story.description}
 
+IMPORTANT: Focus on the LATEST developments. What happened TODAY or YESTERDAY? Don't rehash old events unless there's a new development.
+
 Include:
-1. The key facts: who, what, when, where, specific numbers
+1. The key facts: who, what, when (use TODAY, YESTERDAY, or specific recent dates), where, specific numbers
 2. Names of officials, agencies, or figures involved
-3. How Americans are reacting (find real quotes from X posts with @handles or names)
+3. How Americans are reacting NOW (find recent quotes from X posts with @handles or names)
 4. Multiple perspectives if the issue is divisive
 5. Why this matters to everyday Americans
 
 Output as JSON only:
 {
-  "headline": "Compelling headline with key facts",
+  "headline": "Compelling headline emphasizing the NEW development",
   "subheadline": "Additional context or null",
-  "leadParagraph": "80-100 word opening paragraph covering the essential facts",
+  "leadParagraph": "80-100 word opening paragraph covering what happened TODAY/recently",
   "body": "300-400 words with details, quotes from Americans, context. Use \\n\\n between paragraphs.",
   "section": "${story.section}"
 }`,
