@@ -206,17 +206,23 @@ export async function POST(request: Request) {
     }
   }
 
+  // Check for force regenerate flag
+  const url = new URL(request.url);
+  const forceRegenerate = url.searchParams.get("force") === "true";
+
   const today = getTodayDateString();
 
   try {
-    // Check if we already have today's edition
-    const exists = await editionExists(today);
-    if (exists) {
-      return NextResponse.json({
-        success: true,
-        message: "Edition already exists for today",
-        date: today,
-      });
+    // Check if we already have today's edition (skip if force regenerate)
+    if (!forceRegenerate) {
+      const exists = await editionExists(today);
+      if (exists) {
+        return NextResponse.json({
+          success: true,
+          message: "Edition already exists for today",
+          date: today,
+        });
+      }
     }
 
     // Generate new articles

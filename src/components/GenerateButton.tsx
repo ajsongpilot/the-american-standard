@@ -3,7 +3,12 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 
-export function GenerateButton() {
+interface GenerateButtonProps {
+  force?: boolean;
+  label?: string;
+}
+
+export function GenerateButton({ force = false, label }: GenerateButtonProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -14,9 +19,10 @@ export function GenerateButton() {
     setStatus("Connecting to Grok AI...");
 
     try {
-      setStatus("Searching real-time news sources... (this may take 1-2 minutes)");
+      setStatus("Searching trending news sources... (this may take 1-2 minutes)");
       
-      const response = await fetch("/api/generate-edition", {
+      const url = force ? "/api/generate-edition?force=true" : "/api/generate-edition";
+      const response = await fetch(url, {
         method: "POST",
       });
 
@@ -38,6 +44,8 @@ export function GenerateButton() {
     }
   }
 
+  const buttonLabel = label || (force ? "Regenerate Edition" : "Generate Today's Edition");
+
   return (
     <div className="space-y-4">
       <Button
@@ -45,8 +53,9 @@ export function GenerateButton() {
         disabled={isGenerating}
         size="lg"
         className="font-semibold"
+        variant={force ? "outline" : "default"}
       >
-        {isGenerating ? "Generating..." : "Generate Today's Edition"}
+        {isGenerating ? "Generating..." : buttonLabel}
       </Button>
       
       {status && (
@@ -58,7 +67,10 @@ export function GenerateButton() {
       )}
       
       <p className="text-xs text-muted-foreground">
-        This will use Grok AI to fetch and write articles based on today&apos;s real news.
+        {force 
+          ? "This will replace the current edition with fresh content from trending news."
+          : "This will use Grok AI to fetch and write articles based on today's real news."
+        }
       </p>
     </div>
   );
