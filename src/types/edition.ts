@@ -4,6 +4,28 @@ export type ArticleSection =
   | "State & Local"
   | "Opinion";
 
+export type BiasVerdict = 
+  | "Misleading"
+  | "Missing Context" 
+  | "Spin"
+  | "Omits Key Facts"
+  | "Narrative Push"
+  | "Fair Coverage";
+
+export interface MediaCheck {
+  sourceName: string;        // "Star Tribune", "CNN", "NYT"
+  sourceUrl: string;         // Link to their article
+  articleTitle: string;      // Their headline
+  theirNarrative: string;    // What they're pushing (1-2 sentences)
+  whatTheyOmit: string;      // Key facts they leave out
+  xReality: string;          // What X users are actually saying
+  xQuotes: Array<{
+    handle: string;
+    quote: string;
+  }>;
+  verdict: BiasVerdict;
+}
+
 export interface Article {
   id: string;
   headline: string;
@@ -17,6 +39,7 @@ export interface Article {
   publishedAt: string;
   isLeadStory: boolean;
   wordCount: number;
+  mediaWatch?: MediaCheck[];  // Bias checks on other outlets
 }
 
 export interface Edition {

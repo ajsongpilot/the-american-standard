@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { saveEdition, getLatestEdition, editionExists } from "@/lib/kv";
-import type { Article, Edition, ArticleSection } from "@/types/edition";
+import type { Article, Edition, ArticleSection, MediaCheck, BiasVerdict } from "@/types/edition";
 import { getTodayDateString } from "@/types/edition";
 
 // Use Node.js runtime for longer timeout (Vercel Pro allows up to 300s)
@@ -35,6 +35,17 @@ interface RawArticle {
   leadParagraph: string;
   body: string;
   section: string;
+}
+
+interface RawMediaCheck {
+  sourceName: string;
+  sourceUrl: string;
+  articleTitle: string;
+  theirNarrative: string;
+  whatTheyOmit: string;
+  xReality: string;
+  xQuotes: Array<{ handle: string; quote: string }>;
+  verdict: string;
 }
 
 // Call Grok API with search enabled
@@ -212,13 +223,96 @@ Output as JSON only:
   return JSON.parse(jsonMatch[0]) as RawArticle;
 }
 
+// PHASE 3: Generate media bias check for an article
+async function generateMediaWatch(headline: string, topic: string): Promise<MediaCheck[]> {
+  console.log(`Generating media watch for: ${headline}`);
+
+  const response = await callGrokWithSearch(
+    [
+      {
+        role: "system",
+        content: `You are a media bias analyst for The American Standard. Your job is to find mainstream media articles about a topic and fact-check them using X/Twitter as the source of truth.
+
+Look for:
+1. Mainstream media articles (CNN, NYT, WaPo, local papers, etc.) covering the same story
+2. X posts from Americans calling out bias, omissions, or spin in that coverage
+3. What the MSM narrative is vs what regular people on X are actually saying
+
+Be specific: find actual article URLs, quote actual X users with @handles.`,
+      },
+      {
+        role: "user",
+        content: `Topic: ${headline}
+${topic}
+
+Find 1-2 mainstream media articles covering this story. For each:
+1. Find the actual article URL and title
+2. Identify their narrative/spin
+3. What key facts do they omit or downplay?
+4. Find X posts from Americans calling out the coverage
+5. Give a verdict: "Misleading", "Missing Context", "Spin", "Omits Key Facts", "Narrative Push", or "Fair Coverage"
+
+Output as JSON only:
+{
+  "mediaChecks": [
+    {
+      "sourceName": "Star Tribune",
+      "sourceUrl": "https://actual-url.com/article",
+      "articleTitle": "Their headline",
+      "theirNarrative": "What spin they're pushing (1-2 sentences)",
+      "whatTheyOmit": "Key facts they leave out or downplay",
+      "xReality": "What Americans on X are actually saying about this story",
+      "xQuotes": [
+        {"handle": "@username", "quote": "Their actual post"}
+      ],
+      "verdict": "Misleading"
+    }
+  ]
+}
+
+If you can't find relevant MSM articles to fact-check, return {"mediaChecks": []}`,
+      },
+    ],
+    2000,
+    0.4
+  );
+
+  try {
+    const jsonMatch = response.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      console.log(`No media checks found for: ${headline}`);
+      return [];
+    }
+    
+    const data = JSON.parse(jsonMatch[0]) as { mediaChecks: RawMediaCheck[] };
+    
+    // Validate and transform
+    const validVerdicts: BiasVerdict[] = [
+      "Misleading", "Missing Context", "Spin", 
+      "Omits Key Facts", "Narrative Push", "Fair Coverage"
+    ];
+    
+    return data.mediaChecks
+      .filter(check => check.sourceName && check.sourceUrl)
+      .map(check => ({
+        ...check,
+        verdict: validVerdicts.includes(check.verdict as BiasVerdict) 
+          ? (check.verdict as BiasVerdict) 
+          : "Missing Context"
+      }));
+  } catch (err) {
+    console.error(`Failed to parse media watch for: ${headline}`, err);
+    return [];
+  }
+}
+
 // Main generation function
 async function generateArticles(): Promise<Article[]> {
   // PHASE 1: Get trending stories
   const stories = await getTrendingStories();
 
-  // Limit to 10 stories max (to stay within time limits)
-  const storiesToWrite = stories.slice(0, 10);
+  // Limit to 8 stories to leave time for media watch (was 10)
+  const storiesToWrite = stories.slice(0, 8);
 
   // PHASE 2: Write articles in parallel (batches of 3 to avoid rate limits)
   const articles: Article[] = [];
@@ -239,6 +333,7 @@ async function generateArticles(): Promise<Article[]> {
           publishedAt: timestamp,
           isLeadStory: i === 0 && batchIndex === 0,
           wordCount: countWords(raw.leadParagraph + " " + raw.body),
+          storyTopic: story.description, // Keep for phase 3
         }))
         .catch((err) => {
           console.error(`Failed to write article for: ${story.title}`, err);
@@ -247,7 +342,7 @@ async function generateArticles(): Promise<Article[]> {
     );
 
     const batchResults = await Promise.all(batchPromises);
-    articles.push(...(batchResults.filter(Boolean) as Article[]));
+    articles.push(...(batchResults.filter(Boolean) as (Article & { storyTopic: string })[]));
 
     // Small delay between batches
     if (i + 3 < storiesToWrite.length) {
@@ -255,8 +350,38 @@ async function generateArticles(): Promise<Article[]> {
     }
   }
 
-  console.log(`Generated ${articles.length} articles`);
-  return articles;
+  console.log(`Generated ${articles.length} articles, now adding media watch...`);
+
+  // PHASE 3: Add media watch to top 4 articles (most important stories)
+  // Run in parallel batches of 2 to save time
+  const articlesToCheck = articles.slice(0, 4);
+  
+  for (let i = 0; i < articlesToCheck.length; i += 2) {
+    const batch = articlesToCheck.slice(i, i + 2);
+    const mediaWatchPromises = batch.map(async (article) => {
+      const articleWithTopic = article as Article & { storyTopic?: string };
+      const mediaWatch = await generateMediaWatch(
+        article.headline,
+        articleWithTopic.storyTopic || article.leadParagraph
+      );
+      article.mediaWatch = mediaWatch.length > 0 ? mediaWatch : undefined;
+    });
+    
+    await Promise.all(mediaWatchPromises);
+    
+    if (i + 2 < articlesToCheck.length) {
+      await new Promise((resolve) => setTimeout(resolve, 300));
+    }
+  }
+
+  // Clean up temporary storyTopic field
+  const cleanedArticles = articles.map(({ ...article }) => {
+    const { storyTopic, ...clean } = article as Article & { storyTopic?: string };
+    return clean;
+  });
+
+  console.log(`Generated ${cleanedArticles.length} articles with media watch`);
+  return cleanedArticles;
 }
 
 function validateSection(section: string): ArticleSection {

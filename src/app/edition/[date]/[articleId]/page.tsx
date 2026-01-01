@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { Masthead, Footer } from "@/components/newspaper";
+import { MediaWatch } from "@/components/MediaWatch";
 import { getEdition } from "@/lib/kv";
 import { formatEditionDate } from "@/types/edition";
 
@@ -153,6 +154,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <p key={idx}>{paragraph}</p>
             ))}
           </div>
+
+          {/* Media Watch - Fact-checking other outlets */}
+          {article.mediaWatch && article.mediaWatch.length > 0 && (
+            <div className="not-prose">
+              <MediaWatch checks={article.mediaWatch} />
+            </div>
+          )}
 
           {/* Footer info */}
           <div className="not-prose mt-12 pt-6 border-t border-rule">
