@@ -150,11 +150,6 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             {article.leadParagraph}
           </p>
 
-          {/* Featured Image with credit */}
-          {article.featuredImage && (
-            <FeaturedImage image={article.featuredImage} />
-          )}
-
           {/* Article body */}
           <div className="article-text mt-6 space-y-5">
             {article.body.split("\n\n").map((paragraph, idx) => (

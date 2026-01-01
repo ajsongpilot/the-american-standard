@@ -380,14 +380,6 @@ async function generateArticles(): Promise<Article[]> {
             reposts: r.reposts,
             verified: r.verified,
           })) as Article["xReactions"],
-          featuredImage: raw.featuredImage?.sourceUrl ? {
-            description: raw.featuredImage.description,
-            sourceHandle: raw.featuredImage.sourceHandle.startsWith("@") 
-              ? raw.featuredImage.sourceHandle 
-              : `@${raw.featuredImage.sourceHandle}`,
-            sourceUrl: raw.featuredImage.sourceUrl,
-            imageUrl: raw.featuredImage.imageUrl,
-          } : undefined,
         }))
         .catch((err) => {
           console.error(`Failed to write article for: ${story.title}`, err);
