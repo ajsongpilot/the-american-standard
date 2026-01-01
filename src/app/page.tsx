@@ -78,14 +78,6 @@ async function EditionContent() {
 
         {/* Remaining articles organized by section */}
         <EditionGrid articles={otherArticles} editionDate={edition.date} />
-
-        {/* Regenerate option */}
-        <div className="mt-12 pt-8 border-t border-rule text-center">
-          <p className="text-sm text-muted-foreground mb-4">
-            Generated at {new Date(edition.generatedAt).toLocaleTimeString()} • {edition.articles.length} articles
-          </p>
-          <GenerateButton force={true} label="Refresh with Latest News" />
-        </div>
       </main>
 
       <Footer />
