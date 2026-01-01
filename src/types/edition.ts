@@ -2,6 +2,7 @@ export type ArticleSection =
   | "National Politics"
   | "Washington Briefs"
   | "The States"
+  | "Geopolitics"
   | "Culture"
   | "Opinion";
 
@@ -59,6 +60,7 @@ export interface Article {
   subheadline?: string;
   leadParagraph: string;
   body: string;
+  whatItMeansForYou?: string;  // Impact on everyday Americans
   section: ArticleSection;
   byline: string;
   imageUrl?: string;

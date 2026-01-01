@@ -5,6 +5,7 @@ import { Masthead, Footer } from "@/components/newspaper";
 import { MediaWatch } from "@/components/MediaWatch";
 import { ViralContent } from "@/components/ViralContent";
 import { XReactions } from "@/components/XReactions";
+import { WhatItMeans } from "@/components/WhatItMeans";
 import { getEdition } from "@/lib/kv";
 import { formatEditionDate } from "@/types/edition";
 
@@ -156,6 +157,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <p key={idx}>{paragraph}</p>
             ))}
           </div>
+
+          {/* What It Means For You - Impact on everyday Americans */}
+          {article.whatItMeansForYou && (
+            <div className="not-prose">
+              <WhatItMeans content={article.whatItMeansForYou} />
+            </div>
+          )}
 
           {/* X Reactions - What Americans are saying */}
           {article.xReactions && article.xReactions.length > 0 && (

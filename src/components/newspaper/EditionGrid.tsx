@@ -11,6 +11,7 @@ const SECTION_ORDER: ArticleSection[] = [
   "National Politics",
   "Washington Briefs",
   "The States",
+  "Geopolitics",
   "Culture",
   "Opinion",
 ];

@@ -34,6 +34,7 @@ interface RawArticle {
   subheadline?: string;
   leadParagraph: string;
   body: string;
+  whatItMeansForYou?: string;
   section: string;
   viralVideos?: Array<{
     platform: string;
@@ -117,44 +118,47 @@ async function getTrendingStories(): Promise<StoryTopic[]> {
     [
       {
         role: "user",
-        content: `What are the top 35-40 stories Americans are talking about on X right now?
+        content: `What are the top 25-30 stories Americans are talking about on X right now?
 
-Search X/Twitter for what's ACTUALLY trending. Give me LOTS of stories across these sections:
+Search X/Twitter for what's ACTUALLY trending. Give me stories across these sections:
 
-NATIONAL POLITICS (10-12 stories):
+NATIONAL POLITICS (6-8 stories):
 - Trump administration actions and decisions
-- Federal policy debates, executive orders
-- Immigration, economy, trade policy
-- Major political figures and their moves
+- Federal policy - immigration, economy, trade
+- Major political figures and controversies
 
-WASHINGTON BRIEFS (8-10 stories):
+WASHINGTON BRIEFS (5-6 stories):
 - Congress, legislation, hearings, votes
-- DOJ, FBI, federal agencies
+- DOJ, FBI, federal agency actions
 - Government scandals, investigations
-- Bureaucracy news
 
-THE STATES (8-10 stories):
-- Governors making news
-- State legislatures, laws, court cases
-- State-level scandals or investigations
-- Regional issues getting national attention
+THE STATES (4-5 stories):
+- Governors making national news
+- State laws, court cases, scandals
+- Regional stories getting attention
 
-CULTURE (8-10 stories):
-- Hot debates on X (tech, H1B, social issues)
-- Viral moments, videos, memes blowing up
-- Public figures clashing (Vivek vs tech workers, etc.)
-- Entertainment, sports, media controversies
-- Things people are arguing about that aren't pure politics
+GEOPOLITICS (4-5 stories):
+- US foreign policy affecting Americans
+- Trade wars, tariffs, sanctions
+- Military actions, international conflicts
+- Immigration from specific countries
+- Anything abroad that impacts American jobs, prices, or security
+
+CULTURE (5-6 stories):
+- Hot debates on X (tech workers vs H1B, etc.)
+- Viral moments, videos blowing up
+- Public figures clashing
+- Culture war topics people are arguing about
 
 RULES:
-- Max 3 articles on any single news event (different angles OK)
-- Include the PEOPLE involved - names, handles, personalities
-- Capture debates and clashes, not just facts
+- Max 2-3 articles on any single news event
+- Include PEOPLE - names, handles, personalities
+- Focus on what impacts AMERICANS
 
 For each story:
 1. Specific title with names, numbers, details
 2. One sentence on why it's trending
-3. Section: "National Politics", "Washington Briefs", "The States", or "Culture"
+3. Section: "National Politics", "Washington Briefs", "The States", "Geopolitics", or "Culture"
 
 Output JSON only:
 {"stories": [{"title": "...", "description": "...", "section": "..."}]}`,
@@ -191,22 +195,22 @@ async function writeArticle(story: StoryTopic, isLead: boolean): Promise<RawArti
     [
       {
         role: "system",
-        content: `You are a journalist for The American Standard ("Clear. Fair. American.").
+        content: `You are a journalist for The American Standard - a populist newspaper that serves THE AMERICAN PEOPLE.
 Today's date is ${today}.
 
-WRITING PRINCIPLES:
-1. ACTIONS over STATEMENTS - What did people DO, not just say/tweet
-2. REAL PEOPLE - Quote and credit everyday Americans, not just officials
-3. ACCOUNTABILITY - When government fails, say so. Name names.
-4. CLARITY - Be specific: names, numbers, dates, locations
+OUR MISSION: American news FOR Americans. We hold the government ACCOUNTABLE to the people who pay their salaries.
 
-GOOD: "The FBI launched raids after a viral video exposed empty daycares collecting millions"
-BAD: "Officials expressed concern about the situation"
+CRITICAL RULES:
+1. NEVER FABRICATE QUOTES - Do NOT make up quotes from fictional people ("Maria Gonzalez, a diner owner, told The American Standard..."). We have no reporters. Only use:
+   - Real quotes from X posts (with @handles)
+   - Official statements from named officials
+   - Data from cited reports
+2. ACTIONS over PR - What did they DO, not what they said/tweeted
+3. ACCOUNTABILITY - Name names. Who failed? Who's responsible?
+4. IMPACT - Every story must explain why Americans should care
 
-GOOD: "Americans on X are furious about the H1B debate, with tech workers demanding answers"  
-BAD: "The policy has generated mixed reactions"
-
-Write like a newspaper, not a press release.`,
+BAD (fabricated): "John Smith, a construction worker in Texas, told The American Standard..."
+GOOD (real): "According to Bureau of Labor Statistics data..." or "@realworker posted on X: '...'"`,
       },
       {
         role: "user",
@@ -214,19 +218,20 @@ Write like a newspaper, not a press release.`,
 
 Context: ${story.description}
 
-Include:
-1. The key facts - who, what, when, where, specific numbers
-2. How this affects everyday Americans
-3. Multiple perspectives if it's a debate
-4. Government ACTIONS (not just statements)
-5. If someone exposed this story (whistleblower, citizen journalist), credit them
+STRUCTURE:
+1. leadParagraph: The key facts (who, what, when, specific numbers)
+2. body: Details, context, government actions/failures. NO FAKE QUOTES.
+3. whatItMeansForYou: 2-3 sentences explaining the direct impact on everyday Americans (taxes, jobs, prices, safety, rights)
+
+DO NOT fabricate quotes from fictional people. Only use real X posts or official statements.
 
 Output as JSON only:
 {
   "headline": "Clear, specific headline",
   "subheadline": "Additional context or null",
-  "leadParagraph": "80-100 words covering the key facts",
-  "body": "300-400 words with details and context. Use \\n\\n between paragraphs.",
+  "leadParagraph": "80-100 words - the key facts",
+  "body": "250-350 words. Use \\n\\n between paragraphs. NO FABRICATED QUOTES.",
+  "whatItMeansForYou": "2-3 sentences: How does this affect YOU as an American? Your wallet, your job, your family, your rights?",
   "section": "${story.section}",
   "viralVideos": [
     {
@@ -238,9 +243,9 @@ Output as JSON only:
   ],
   "xReactions": [
     {
-      "handle": "@username",
-      "displayName": "Display Name",
-      "quote": "Their full post content",
+      "handle": "@realusername",
+      "displayName": "Real Display Name",
+      "quote": "Their actual post content from X",
       "url": "https://x.com/username/status/123456789",
       "verified": true,
       "likes": "12.5K",
@@ -249,9 +254,7 @@ Output as JSON only:
   ]
 }
 
-Find 3-5 real X posts reacting to this story for xReactions.
-IMPORTANT: Include the actual post URL (x.com/user/status/ID) when you can find it.
-Headlines should be traditional newspaper style - about the STORY.`,
+Find 3-5 REAL X posts about this story. These must be actual posts you found, not fabricated.`,
       },
     ],
     2500,
@@ -385,6 +388,7 @@ async function generateArticles(): Promise<Article[]> {
           subheadline: raw.subheadline || undefined,
           leadParagraph: raw.leadParagraph,
           body: raw.body,
+          whatItMeansForYou: raw.whatItMeansForYou || undefined,
           section: validateSection(raw.section),
           byline: "The American Standard Staff",
           publishedAt: timestamp,
@@ -462,6 +466,9 @@ function validateSection(section: string): ArticleSection {
     "State & Local": "The States",
     "States": "The States",
     "Local": "The States",
+    "Foreign Policy": "Geopolitics",
+    "International": "Geopolitics",
+    "World": "Geopolitics",
   };
   
   const mapped = sectionMap[section] || section;
@@ -470,6 +477,7 @@ function validateSection(section: string): ArticleSection {
     "National Politics",
     "Washington Briefs",
     "The States",
+    "Geopolitics",
     "Culture",
     "Opinion",
   ];
