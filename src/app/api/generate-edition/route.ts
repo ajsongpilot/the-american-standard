@@ -91,7 +91,7 @@ async function callGrokWithSearch(
           { type: "news" },
           { type: "web" },
         ],
-        max_search_results: 20,
+        max_search_results: 40,
         return_citations: true,
       },
       temperature,
@@ -457,6 +457,15 @@ async function generateArticles(): Promise<Article[]> {
 }
 
 function validateSection(section: string): ArticleSection {
+  // Map legacy/alternate names
+  const sectionMap: Record<string, ArticleSection> = {
+    "State & Local": "The States",
+    "States": "The States",
+    "Local": "The States",
+  };
+  
+  const mapped = sectionMap[section] || section;
+  
   const validSections: ArticleSection[] = [
     "National Politics",
     "Washington Briefs",
@@ -464,8 +473,8 @@ function validateSection(section: string): ArticleSection {
     "Culture",
     "Opinion",
   ];
-  return validSections.includes(section as ArticleSection)
-    ? (section as ArticleSection)
+  return validSections.includes(mapped as ArticleSection)
+    ? (mapped as ArticleSection)
     : "National Politics";
 }
 
