@@ -144,11 +144,18 @@ GEOPOLITICS (4-5 stories):
 - Immigration from specific countries
 - Anything abroad that impacts American jobs, prices, or security
 
-CULTURE (5-6 stories):
+CULTURE (6-8 stories):
 - Hot debates on X (tech workers vs H1B, etc.)
 - Viral moments, videos blowing up
 - Public figures clashing
 - Culture war topics people are arguing about
+- GENERATIONAL ISSUES: Economic realities facing Boomers, Gen X, Millennials, Gen Z
+  * Social Security/Medicare sustainability
+  * Housing affordability across generations
+  * Job market access, wages, career mobility
+  * Student debt, cost of living comparisons
+  * Wealth distribution by age
+  * Frame as "different priorities" not generational blame
 
 RULES:
 - Max 2-3 articles on any single news event
@@ -208,6 +215,11 @@ CRITICAL RULES:
 2. ACTIONS over PR - What did they DO, not what they said/tweeted
 3. ACCOUNTABILITY - Name names. Who failed? Who's responsible?
 4. IMPACT - Every story must explain why Americans should care
+5. GENERATIONAL TOPICS - When covering issues affecting different generations (Boomers, X, Millennials, Z):
+   - Present ECONOMIC REALITIES, not generational blame
+   - Show different priorities and challenges each generation faces
+   - Use DATA (housing costs, wages, debt, benefits) not stereotypes
+   - Frame as "Americans of different ages" facing different circumstances
 
 BAD (fabricated): "John Smith, a construction worker in Texas, told The American Standard..."
 GOOD (real): "According to Bureau of Labor Statistics data..." or "@realworker posted on X: '...'"`,
