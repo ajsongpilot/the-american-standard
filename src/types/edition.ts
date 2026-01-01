@@ -1,7 +1,7 @@
 export type ArticleSection =
   | "National Politics"
   | "Washington Briefs"
-  | "State & Local"
+  | "The States"
   | "Culture"
   | "Opinion";
 

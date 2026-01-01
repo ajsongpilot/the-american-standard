@@ -10,7 +10,7 @@ interface EditionGridProps {
 const SECTION_ORDER: ArticleSection[] = [
   "National Politics",
   "Washington Briefs",
-  "State & Local",
+  "The States",
   "Culture",
   "Opinion",
 ];

@@ -117,33 +117,44 @@ async function getTrendingStories(): Promise<StoryTopic[]> {
     [
       {
         role: "user",
-        content: `What are the top 15-18 stories Americans are talking about on X right now?
+        content: `What are the top 35-40 stories Americans are talking about on X right now?
 
-Search X/Twitter for what's ACTUALLY trending. I want everything people are buzzing about:
+Search X/Twitter for what's ACTUALLY trending. Give me LOTS of stories across these sections:
 
-POLITICS & GOVERNMENT:
+NATIONAL POLITICS (10-12 stories):
 - Trump administration actions and decisions
-- Congress, legislation, political battles
-- Federal investigations, DOJ/FBI news
-- State politics making national news
+- Federal policy debates, executive orders
+- Immigration, economy, trade policy
+- Major political figures and their moves
 
-ECONOMY & POLICY:
-- Jobs, markets, economic news
-- Immigration policy debates (H1B, border, visas)
-- Trade, tariffs, business news
+WASHINGTON BRIEFS (8-10 stories):
+- Congress, legislation, hearings, votes
+- DOJ, FBI, federal agencies
+- Government scandals, investigations
+- Bureaucracy news
 
-CULTURE & DEBATE:
-- Hot debates on X (tech policy, social issues)
-- Viral moments, videos blowing up
-- Public figures in the news (politicians, business leaders, commentators)
-- Culture war topics people are arguing about
+THE STATES (8-10 stories):
+- Governors making news
+- State legislatures, laws, court cases
+- State-level scandals or investigations
+- Regional issues getting national attention
 
-If ONE story is dominating (like a major scandal), give me 2-3 angles on it, then cover OTHER stories too.
+CULTURE (8-10 stories):
+- Hot debates on X (tech, H1B, social issues)
+- Viral moments, videos, memes blowing up
+- Public figures clashing (Vivek vs tech workers, etc.)
+- Entertainment, sports, media controversies
+- Things people are arguing about that aren't pure politics
+
+RULES:
+- Max 3 articles on any single news event (different angles OK)
+- Include the PEOPLE involved - names, handles, personalities
+- Capture debates and clashes, not just facts
 
 For each story:
 1. Specific title with names, numbers, details
 2. One sentence on why it's trending
-3. Section: "National Politics", "Washington Briefs", "State & Local", or "Culture"
+3. Section: "National Politics", "Washington Briefs", "The States", or "Culture"
 
 Output JSON only:
 {"stories": [{"title": "...", "description": "...", "section": "..."}]}`,
@@ -357,15 +368,15 @@ async function generateArticles(): Promise<Article[]> {
   // PHASE 1: Get trending stories
   const stories = await getTrendingStories();
 
-  // Write up to 12 stories for good variety
-  const storiesToWrite = stories.slice(0, 12);
+  // Write up to 30 stories for comprehensive coverage
+  const storiesToWrite = stories.slice(0, 30);
 
-  // PHASE 2: Write articles in parallel (batches of 3 to avoid rate limits)
+  // PHASE 2: Write articles in parallel (batches of 5 to balance speed and rate limits)
   const articles: Article[] = [];
   const timestamp = new Date().toISOString();
 
-  for (let i = 0; i < storiesToWrite.length; i += 3) {
-    const batch = storiesToWrite.slice(i, i + 3);
+  for (let i = 0; i < storiesToWrite.length; i += 5) {
+    const batch = storiesToWrite.slice(i, i + 5);
     const batchPromises = batch.map((story, batchIndex) =>
       writeArticle(story, i === 0 && batchIndex === 0)
         .then((raw) => ({
@@ -449,7 +460,7 @@ function validateSection(section: string): ArticleSection {
   const validSections: ArticleSection[] = [
     "National Politics",
     "Washington Briefs",
-    "State & Local",
+    "The States",
     "Culture",
     "Opinion",
   ];
