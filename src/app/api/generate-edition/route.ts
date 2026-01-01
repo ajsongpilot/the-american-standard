@@ -233,44 +233,54 @@ async function generateMediaWatch(headline: string, topic: string): Promise<Medi
         role: "system",
         content: `You are a media bias analyst for The American Standard. Your job is to find mainstream media articles about a topic and fact-check them using X/Twitter as the source of truth.
 
-Look for:
-1. Mainstream media articles (CNN, NYT, WaPo, local papers, etc.) covering the same story
-2. X posts from Americans calling out bias, omissions, or spin in that coverage
-3. What the MSM narrative is vs what regular people on X are actually saying
+YOUR TASK:
+1. Search for news articles covering this story - YOU decide which outlets based on the story type
+2. Find X posts from Americans calling out bias, omissions, or spin in that specific coverage
+3. Compare the MSM narrative vs what regular people on X are actually saying
 
-Be specific: find actual article URLs, quote actual X users with @handles.`,
+SOURCE SELECTION (Grok decides):
+- State/local stories → local papers (Star Tribune, LA Times, Boston Globe, etc.)
+- National politics → national outlets (CNN, NYT, WaPo, Politico, etc.)  
+- Pick whoever is ACTUALLY being called out on X for their coverage
+
+Be specific: find actual article URLs that exist, quote actual X users with @handles.`,
       },
       {
         role: "user",
         content: `Topic: ${headline}
 ${topic}
 
-Find 1-2 mainstream media articles covering this story. For each:
-1. Find the actual article URL and title
-2. Identify their narrative/spin
-3. What key facts do they omit or downplay?
-4. Find X posts from Americans calling out the coverage
-5. Give a verdict: "Misleading", "Missing Context", "Spin", "Omits Key Facts", "Narrative Push", or "Fair Coverage"
+Search for mainstream media articles covering this story. YOU DECIDE which outlets to fact-check based on:
+- For LOCAL stories (state scandals, city politics): Find local papers (Star Tribune, LA Times, Chicago Tribune, etc.)
+- For NATIONAL stories: Find national outlets (CNN, NYT, WaPo, AP, etc.)
+- Find whoever is ACTUALLY covering this story and getting called out on X
+
+For each article you find (1-2 max):
+1. Get the actual article URL and headline
+2. What narrative/spin are they pushing?
+3. What key facts do they omit, bury, or downplay?
+4. Find X posts from Americans calling out their coverage
+5. Verdict: "Misleading", "Missing Context", "Spin", "Omits Key Facts", "Narrative Push", or "Fair Coverage"
 
 Output as JSON only:
 {
   "mediaChecks": [
     {
-      "sourceName": "Star Tribune",
-      "sourceUrl": "https://actual-url.com/article",
-      "articleTitle": "Their headline",
+      "sourceName": "Name of outlet",
+      "sourceUrl": "https://actual-url-you-found.com/article",
+      "articleTitle": "Their actual headline",
       "theirNarrative": "What spin they're pushing (1-2 sentences)",
       "whatTheyOmit": "Key facts they leave out or downplay",
-      "xReality": "What Americans on X are actually saying about this story",
+      "xReality": "What Americans on X are actually saying about this coverage",
       "xQuotes": [
-        {"handle": "@username", "quote": "Their actual post"}
+        {"handle": "@realhandle", "quote": "Their actual post calling out the coverage"}
       ],
       "verdict": "Misleading"
     }
   ]
 }
 
-If you can't find relevant MSM articles to fact-check, return {"mediaChecks": []}`,
+If you can't find relevant MSM articles being criticized on X, return {"mediaChecks": []}`,
       },
     ],
     2000,
