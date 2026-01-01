@@ -23,6 +23,12 @@ interface GrokResponse {
   }>;
 }
 
+interface StoryTopic {
+  title: string;
+  description: string;
+  section: string;
+}
+
 interface RawArticle {
   headline: string;
   subheadline?: string;
@@ -31,9 +37,14 @@ interface RawArticle {
   section: string;
 }
 
-async function callGrokAPI(messages: GrokMessage[]): Promise<string> {
+// Call Grok API with search enabled
+async function callGrokWithSearch(
+  messages: GrokMessage[],
+  maxTokens: number = 2000,
+  temperature: number = 0.5
+): Promise<string> {
   const apiKey = process.env.XAI_API_KEY;
-  
+
   if (!apiKey) {
     throw new Error("XAI_API_KEY is not configured");
   }
@@ -47,138 +58,175 @@ async function callGrokAPI(messages: GrokMessage[]): Promise<string> {
     body: JSON.stringify({
       model: "grok-3-latest",
       messages,
-      // Use search_parameters for Live Search (web, news, X)
       search_parameters: {
         mode: "on",
         sources: [
-          { type: "x" },       // X/Twitter search for trending topics
-          { type: "news" },    // News sources
-          { type: "web" },     // Web search
+          { type: "x" },
+          { type: "news" },
+          { type: "web" },
         ],
-        max_search_results: 30,
+        max_search_results: 20,
         return_citations: true,
       },
-      temperature: 0.7, // Higher for more variety in story selection
-      max_tokens: 16000, // More tokens for 8-10 detailed articles with quotes
+      temperature,
+      max_tokens: maxTokens,
     }),
   });
 
   if (!response.ok) {
     const error = await response.text();
-    console.error("Grok API error response:", error);
-    throw new Error(`Grok API error: ${response.status} - ${error}`);
+    console.error("Grok API error:", error);
+    throw new Error(`Grok API error: ${response.status}`);
   }
 
   const data = (await response.json()) as GrokResponse;
-  const content = data.choices[0]?.message?.content || "";
-  console.log("Grok response length:", content.length);
-  return content;
+  return data.choices[0]?.message?.content || "";
 }
 
-async function generateArticles(): Promise<Article[]> {
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+// PHASE 1: Get list of trending stories
+async function getTrendingStories(): Promise<StoryTopic[]> {
+  console.log("Phase 1: Fetching trending stories...");
 
-  const systemPrompt = `You are a newspaper editor for "The American Standard" with the tagline "Clear. Fair. American."
+  const response = await callGrokWithSearch(
+    [
+      {
+        role: "user",
+        content: `What are the top 12 trending political stories in America right now? 
 
-YOUR PRIMARY JOB: Find what's TRENDING and VIRAL on X/Twitter right now, capture HOW AMERICANS ARE FEELING about these stories, and write engaging newspaper articles.
+Search X/Twitter and news sources. Include:
+- Major fraud investigations and scandals (federal probes, corruption)
+- Breaking political news and controversies
+- Stories generating significant public debate
+- Federal/state policy changes causing outrage or celebration
+- Political figures in the spotlight
 
-KEY PRINCIPLES:
-1. Search X for what people are ACTUALLY talking about RIGHT NOW
-2. Find stories with massive engagement (10K, 50K, 100K+ posts)
-3. CAPTURE THE EMOTION - are people outraged? Celebrating? Divided? Skeptical?
-4. QUOTE REAL X USERS by their @handle with their actual posts
-5. Cover scandals, fraud, controversies, viral moments, political drama
+For each story provide:
+1. A specific title (with names, places, numbers when relevant)
+2. A one-sentence description
+3. Category: "National Politics", "Washington Briefs", or "State & Local"
 
-Your articles should feel like a blend of traditional journalism AND a pulse check on American sentiment. Readers should understand both WHAT happened and HOW PEOPLE ARE REACTING.
+Output as JSON only:
+{"stories": [{"title": "...", "description": "...", "section": "..."}]}`,
+      },
+    ],
+    3000,
+    0.3
+  );
 
-Style: Traditional newspaper voice but with real quotes from X users showing public reaction.
-Article length: 350-500 words with specific names, numbers, X user quotes with @handles.
-
-Sections: "National Politics", "Washington Briefs", "State & Local"`;
-
-  const userPrompt = `Generate today's edition for ${today}.
-
-STEP 1: Search X/Twitter for what's TRENDING right now:
-- Trending topics and hashtags with high post counts
-- Viral posts generating massive engagement
-- Political controversies sparking heated debate
-- Stories making people ANGRY, EXCITED, WORRIED, or HOPEFUL
-- Scandals, investigations, fraud cases, political drama
-
-STEP 2: For each story, capture THE EMOTIONAL REACTION:
-- What are people saying? Quote actual X users with their @handles
-- Are Americans outraged? Supportive? Divided? Mocking?
-- What's the sentiment breakdown - is it mostly one side or split?
-- Find the most viral/liked responses and reactions
-
-STEP 3: Write 8-10 articles that include:
-- The facts: names, dates, dollar amounts, locations
-- THE PUBLIC REACTION: "Many Americans expressed outrage..." or "The post sparked celebration among..."
-- DIRECT QUOTES from X users: '@username wrote: "actual quote from their post"'
-- Multiple perspectives when the reaction is divided
-- Why this story is resonating emotionally with people
-
-Output as JSON:
-{
-  "articles": [
-    {
-      "headline": "Headline capturing both the story and the reaction",
-      "subheadline": "Context about public sentiment or null",
-      "leadParagraph": "80-100 words covering the story AND how Americans are reacting",
-      "body": "350-450 words with facts, X user quotes with @handles, emotional context. Use \\n\\n between paragraphs",
-      "section": "National Politics|Washington Briefs|State & Local",
-      "isLeadStory": true
-    }
-  ]
-}
-
-First article = #1 trending story (isLeadStory: true). Rest = false.
-INCLUDE REAL @usernames and their quotes in the articles.
-Output ONLY valid JSON.`;
-
-  const response = await callGrokAPI([
-    { role: "system", content: systemPrompt },
-    { role: "user", content: userPrompt },
-  ]);
-
-  // Parse the JSON response
-  let articlesData: { articles: RawArticle[] };
-  try {
-    // Try to extract JSON from the response
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.error("No JSON found in response. First 500 chars:", response.substring(0, 500));
-      throw new Error("No JSON found in response");
-    }
-    articlesData = JSON.parse(jsonMatch[0]) as { articles: RawArticle[] };
-    console.log("Parsed articles count:", articlesData.articles?.length || 0);
-  } catch (parseError) {
-    console.error("Failed to parse Grok response:", parseError);
-    console.error("Response preview:", response.substring(0, 1000));
-    throw new Error("Failed to parse article data from AI response");
+  // Parse JSON
+  const jsonMatch = response.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    console.error("No JSON in trending response:", response.substring(0, 500));
+    throw new Error("Failed to get trending stories");
   }
 
-  // Transform into our Article type
-  const timestamp = new Date().toISOString();
-  const articles: Article[] = articlesData.articles.map((raw, index) => ({
-    id: `article-${Date.now()}-${index}`,
-    headline: raw.headline,
-    subheadline: raw.subheadline,
-    leadParagraph: raw.leadParagraph,
-    body: raw.body,
-    section: validateSection(raw.section),
-    byline: "The American Standard Staff",
-    publishedAt: timestamp,
-    isLeadStory: index === 0, // First article is lead story
-    wordCount: countWords(raw.leadParagraph + " " + raw.body),
-    // Images would be added separately in production
-  }));
+  const data = JSON.parse(jsonMatch[0]) as { stories: StoryTopic[] };
+  console.log(`Found ${data.stories.length} trending stories`);
+  return data.stories;
+}
 
+// PHASE 2: Write article for a single story
+async function writeArticle(story: StoryTopic, isLead: boolean): Promise<RawArticle> {
+  console.log(`Writing article: ${story.title}`);
+
+  const response = await callGrokWithSearch(
+    [
+      {
+        role: "system",
+        content: `You are a newspaper journalist for The American Standard ("Clear. Fair. American.").
+
+WRITING STYLE:
+- Traditional newspaper voice, inverted pyramid structure
+- Say "Americans" not "users on X" or "social media users"
+- Quote real people by name or @handle to show public sentiment
+- Be specific: include names, dollar amounts, dates, locations
+
+TONE:
+- Neutral and factual in reporting
+- Show how Americans are reacting and feeling
+- Include direct quotes from real people on X`,
+      },
+      {
+        role: "user",
+        content: `Write a ${isLead ? "500" : "400"}-word newspaper article about: ${story.title}
+
+${story.description}
+
+Include:
+1. The key facts: who, what, when, where, specific numbers
+2. Names of officials, agencies, or figures involved
+3. How Americans are reacting (find real quotes from X posts with @handles or names)
+4. Multiple perspectives if the issue is divisive
+5. Why this matters to everyday Americans
+
+Output as JSON only:
+{
+  "headline": "Compelling headline with key facts",
+  "subheadline": "Additional context or null",
+  "leadParagraph": "80-100 word opening paragraph covering the essential facts",
+  "body": "300-400 words with details, quotes from Americans, context. Use \\n\\n between paragraphs.",
+  "section": "${story.section}"
+}`,
+      },
+    ],
+    2500,
+    0.5
+  );
+
+  // Parse JSON
+  const jsonMatch = response.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    console.error(`No JSON for article "${story.title}":`, response.substring(0, 300));
+    throw new Error(`Failed to generate article for: ${story.title}`);
+  }
+
+  return JSON.parse(jsonMatch[0]) as RawArticle;
+}
+
+// Main generation function
+async function generateArticles(): Promise<Article[]> {
+  // PHASE 1: Get trending stories
+  const stories = await getTrendingStories();
+
+  // Limit to 10 stories max (to stay within time limits)
+  const storiesToWrite = stories.slice(0, 10);
+
+  // PHASE 2: Write articles in parallel (batches of 3 to avoid rate limits)
+  const articles: Article[] = [];
+  const timestamp = new Date().toISOString();
+
+  for (let i = 0; i < storiesToWrite.length; i += 3) {
+    const batch = storiesToWrite.slice(i, i + 3);
+    const batchPromises = batch.map((story, batchIndex) =>
+      writeArticle(story, i === 0 && batchIndex === 0)
+        .then((raw) => ({
+          id: `article-${Date.now()}-${i + batchIndex}`,
+          headline: raw.headline,
+          subheadline: raw.subheadline || undefined,
+          leadParagraph: raw.leadParagraph,
+          body: raw.body,
+          section: validateSection(raw.section),
+          byline: "The American Standard Staff",
+          publishedAt: timestamp,
+          isLeadStory: i === 0 && batchIndex === 0,
+          wordCount: countWords(raw.leadParagraph + " " + raw.body),
+        }))
+        .catch((err) => {
+          console.error(`Failed to write article for: ${story.title}`, err);
+          return null;
+        })
+    );
+
+    const batchResults = await Promise.all(batchPromises);
+    articles.push(...(batchResults.filter(Boolean) as Article[]));
+
+    // Small delay between batches
+    if (i + 3 < storiesToWrite.length) {
+      await new Promise((resolve) => setTimeout(resolve, 500));
+    }
+  }
+
+  console.log(`Generated ${articles.length} articles`);
   return articles;
 }
 
@@ -206,12 +254,13 @@ export async function POST(request: Request) {
   const referer = request.headers.get("referer");
 
   // Allow requests from the same origin (browser UI) or with valid auth
-  const isSameOrigin = origin?.includes("localhost") || 
-                       referer?.includes("localhost") ||
-                       origin?.includes("vercel.app") ||
-                       referer?.includes("vercel.app") ||
-                       origin?.includes("the-american-standard");
-  
+  const isSameOrigin =
+    origin?.includes("localhost") ||
+    referer?.includes("localhost") ||
+    origin?.includes("vercel.app") ||
+    referer?.includes("vercel.app") ||
+    origin?.includes("the-american-standard");
+
   if (CRON_SECRET && !isSameOrigin) {
     if (cronSecret !== CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -240,6 +289,10 @@ export async function POST(request: Request) {
     // Generate new articles
     console.log(`Generating edition for ${today}...`);
     const articles = await generateArticles();
+
+    if (articles.length === 0) {
+      throw new Error("No articles were generated");
+    }
 
     // Create the edition
     const edition: Edition = {
