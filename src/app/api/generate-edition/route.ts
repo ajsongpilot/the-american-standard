@@ -98,23 +98,28 @@ async function getTrendingStories(): Promise<StoryTopic[]> {
     [
       {
         role: "user",
-        content: `Today is ${today}. What are the top 12 political news stories happening RIGHT NOW or in the last 24-48 hours?
+        content: `Today is ${today}. What are the top 12 UNITED STATES political news stories happening RIGHT NOW or in the last 24-48 hours?
 
-IMPORTANT: I want FRESH news - events that happened TODAY or YESTERDAY, not old stories from weeks or months ago.
+IMPORTANT REQUIREMENTS:
+1. Only US/American political news - no international stories unless they directly involve US policy
+2. Fresh news from TODAY or YESTERDAY, not old stories from weeks/months ago
+3. Focus on what Americans care about
 
-Search X/Twitter and news for:
-- Breaking news from the last 24-48 hours
-- New developments in ongoing stories (new charges filed, new statements made TODAY)
-- Press conferences, announcements, or events happening NOW
-- Fresh scandals, investigations, or controversies just emerging
-- Policy changes announced in the last 48 hours
+Search X/Twitter and US news for:
+- Breaking US political news from the last 24-48 hours
+- Trump administration actions, announcements, or controversies
+- Congressional activity, legislation, hearings
+- Federal investigations, DOJ/FBI actions
+- State-level political news (governors, state legislatures, local scandals)
+- US economic policy, trade, immigration enforcement
+- New developments in ongoing US stories
 
 DO NOT include:
+- International news (India, Australia, UK, etc.) unless it's about US policy
 - Events from weeks or months ago unless there's a NEW development TODAY
-- Old stories just because people are still discussing them
 
 For each story provide:
-1. A specific title with what happened and WHEN (include "today", "yesterday", or specific recent date)
+1. A specific title about US politics with what happened and WHEN
 2. A one-sentence description of the NEW development
 3. Category: "National Politics", "Washington Briefs", or "State & Local"
 
