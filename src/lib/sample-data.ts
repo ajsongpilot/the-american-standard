@@ -94,7 +94,7 @@ Committee members from both parties pressed officials on the recruitment shortfa
 "This isn't a red state or blue state problem—it's an American problem," said the coalition's chair. "Working families in every corner of this country are struggling to find housing they can afford."
 
 The initiative comes as home prices and rents have reached historic highs in many markets, pricing out middle-class buyers and putting pressure on local economies.`,
-      section: "State & Local",
+      section: "The States",
       byline: "The American Standard Staff",
       imageUrl: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop",
       imageCaption: "New housing construction, part of efforts to address the nationwide shortage.",
@@ -110,7 +110,7 @@ The initiative comes as home prices and rents have reached historic highs in man
       body: `Strong demand from Asian markets and favorable exchange rates helped offset higher transportation costs and labor shortages that have plagued the sector.
 
 State agriculture officials credited diversification efforts and investments in processing capacity for the strong performance, while cautioning that challenges remain heading into the new growing season.`,
-      section: "State & Local",
+      section: "The States",
       byline: "The American Standard Staff",
       publishedAt: timestamp,
       isLeadStory: false,
