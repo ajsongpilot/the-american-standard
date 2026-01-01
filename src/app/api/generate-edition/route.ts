@@ -41,11 +41,6 @@ interface RawArticle {
     description: string;
     postedBy?: string;
   }>;
-  relatedLinks?: Array<{
-    title: string;
-    url: string;
-    source: string;
-  }>;
   xReactions?: Array<{
     handle: string;
     displayName?: string;
@@ -215,13 +210,6 @@ Output as JSON only:
       "postedBy": "@handle"
     }
   ],
-  "relatedLinks": [
-    {
-      "title": "Article headline",
-      "url": "actual URL",
-      "source": "Source name"
-    }
-  ],
   "xReactions": [
     {
       "handle": "@username",
@@ -279,12 +267,14 @@ Be specific: find actual article URLs that exist, quote actual X users with @han
         content: `Topic: ${headline}
 ${topic}
 
-Search for mainstream media articles covering this story. YOU DECIDE which outlets to fact-check based on:
-- For LOCAL stories (state scandals, city politics): Find local papers (Star Tribune, LA Times, Chicago Tribune, etc.)
-- For NATIONAL stories: Find national outlets (CNN, NYT, WaPo, AP, etc.)
-- Find whoever is ACTUALLY covering this story and getting called out on X
+Search for mainstream media articles covering this story and FACT-CHECK THEM.
 
-For each article you find (1-2 max):
+Find 3-4 different outlets covering this story:
+- Mix of local AND national outlets when relevant
+- Include whoever is being called out on X for their coverage
+- Look for: CNN, NYT, WaPo, AP, Star Tribune, local papers, Politico, etc.
+
+For EACH outlet (find 3-4):
 1. Get the actual article URL and headline
 2. What narrative/spin are they pushing?
 3. What key facts do they omit, bury, or downplay?
@@ -309,10 +299,10 @@ Output as JSON only:
   ]
 }
 
-If you can't find relevant MSM articles being criticized on X, return {"mediaChecks": []}`,
+Find at least 3 outlets to fact-check. If you can't find any, return {"mediaChecks": []}`,
       },
     ],
-    2000,
+    3000,
     0.4
   );
 
@@ -379,12 +369,6 @@ async function generateArticles(): Promise<Article[]> {
             description: v.description,
             postedBy: v.postedBy,
           })) as Article["viralVideos"],
-          relatedLinks: raw.relatedLinks?.filter(l => l.url)?.map(l => ({
-            title: l.title,
-            url: l.url,
-            source: l.source,
-            stance: "neutral" as const,
-          })) as Article["relatedLinks"],
           xReactions: raw.xReactions?.filter(r => r.handle && r.quote)?.map(r => ({
             handle: r.handle.startsWith("@") ? r.handle : `@${r.handle}`,
             displayName: r.displayName,

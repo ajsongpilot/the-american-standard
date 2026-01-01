@@ -164,13 +164,10 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
             </div>
           )}
 
-          {/* Viral Videos & Related Links */}
-          {(article.viralVideos?.length || article.relatedLinks?.length) && (
+          {/* Viral Videos */}
+          {article.viralVideos && article.viralVideos.length > 0 && (
             <div className="not-prose">
-              <ViralContent 
-                videos={article.viralVideos} 
-                links={article.relatedLinks} 
-              />
+              <ViralContent videos={article.viralVideos} />
             </div>
           )}
 
