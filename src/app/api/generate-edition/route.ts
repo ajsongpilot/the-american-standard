@@ -170,37 +170,51 @@ async function writeArticle(story: StoryTopic, isLead: boolean): Promise<RawArti
     [
       {
         role: "system",
-        content: `You are a newspaper journalist for The American Standard ("Clear. Fair. American.").
+        content: `You are a journalist for The American Standard ("Clear. Fair. American.").
 Today's date is ${today}.
 
-ARTICLE STYLE:
-- Write like a TRADITIONAL NEWSPAPER - facts, sources, context
-- The article body should read like real journalism, NOT like "so-and-so on X said..."
-- Minimal @handles in the body - save those for the separate xReactions section
-- Be specific: names, dollar amounts, dates, locations
-- Mention "Americans are reacting" but don't fill the body with X quotes
+YOUR MISSION: Write articles that RAISE THE PROFILE OF REAL AMERICANS and HOLD GOVERNMENT ACCOUNTABLE.
 
-The X reactions will be displayed separately in their own section, so don't clutter the article with them.`,
+PRIORITY ORDER FOR SOURCES:
+1. CITIZEN JOURNALISTS & WHISTLEBLOWERS - Who broke this story? Who exposed the truth? (e.g., Nick Shirley exposed the daycare fraud)
+2. EVERYDAY AMERICANS affected by or calling attention to this issue
+3. Government ACTIONS (what they DID or FAILED to do) - NOT their tweets or statements
+4. Official quotes ONLY if they reveal accountability or action
+
+DO NOT:
+- Lead with "Official X tweeted..."
+- Focus on government PR statements
+- Write like a press release
+- Let officials control the narrative
+
+DO:
+- Credit the Americans who exposed the story
+- Ask: Who failed? Who's responsible? What should have been done?
+- Focus on government ACTIONS and INACTION
+- Show how this affects everyday Americans
+- Name names when holding people accountable`,
       },
       {
         role: "user",
-        content: `Write a ${isLead ? "500" : "400"}-word newspaper article about: ${story.title}
+        content: `Write a ${isLead ? "500" : "400"}-word article about: ${story.title}
 
 Context: ${story.description}
 
-STRUCTURE YOUR OUTPUT:
-1. "body" = Traditional journalism. Facts, context, quotes from officials/sources. Minimal @handles.
-2. "xReactions" = Separate array of X posts reacting to the story (these display in their own section)
+ACCOUNTABILITY JOURNALISM:
+1. WHO broke this story or exposed it? Lead with them, not government officials.
+2. What did government DO (or fail to do)? Not what they said/tweeted.
+3. Who is RESPONSIBLE? Name names.
+4. How are EVERYDAY AMERICANS affected?
 
-Write the BODY like a newspaper article - don't fill it with "@username said..." 
-Put those reactions in the xReactions array instead.
+Example: Instead of "Secretary Noem tweeted about the investigation..."
+Write: "The investigation came only AFTER citizen journalist Nick Shirley exposed the fraud in a viral video, raising questions about why officials failed to act sooner."
 
 Output as JSON only:
 {
-  "headline": "Traditional newspaper headline (no X/Twitter mention)",
+  "headline": "Headline focusing on accountability or the Americans who exposed it",
   "subheadline": "Additional context or null",
-  "leadParagraph": "80-100 words - the key facts",
-  "body": "300-400 words of JOURNALISM - facts, official quotes, context. NOT a list of X reactions. Use \\n\\n between paragraphs.",
+  "leadParagraph": "80-100 words - lead with WHO exposed this or WHO failed, not government PR",
+  "body": "300-400 words of ACCOUNTABILITY journalism. Credit citizen journalists. Question government failures. Use \\n\\n between paragraphs.",
   "section": "${story.section}",
   "viralVideos": [
     {
