@@ -92,7 +92,7 @@ async function callGrokWithSearch(
           { type: "news" },
           { type: "web" },
         ],
-        max_search_results: 40,
+        max_search_results: 25,
         return_citations: true,
       },
       temperature,
