@@ -574,7 +574,9 @@ export async function POST(request: Request) {
       articleCount: articles.length,
     });
   } catch (error) {
-    console.error("Error generating edition:", error);
+    const errorMessage = error instanceof Error ? error.message : "Unknown error";
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    console.error("Error generating edition:", errorMessage, errorStack);
 
     // Try to fallback to previous edition
     try {
@@ -585,6 +587,7 @@ export async function POST(request: Request) {
             success: false,
             error: "Generation failed, using previous edition",
             fallbackDate: latestEdition.date,
+            debugError: errorMessage, // Include actual error for debugging
           },
           { status: 500 }
         );
@@ -596,7 +599,7 @@ export async function POST(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: error instanceof Error ? error.message : "Unknown error",
+        error: errorMessage,
       },
       { status: 500 }
     );
