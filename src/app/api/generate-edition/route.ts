@@ -64,7 +64,7 @@ interface RawMediaCheck {
   verdict: string;
 }
 
-// Call Grok API with search enabled
+// Call Grok API with search enabled (expensive - use sparingly)
 async function callGrokWithSearch(
   messages: GrokMessage[],
   maxTokens: number = 2000,
@@ -95,6 +95,42 @@ async function callGrokWithSearch(
         max_search_results: 40,
         return_citations: true,
       },
+      temperature,
+      max_tokens: maxTokens,
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    console.error("Grok API error:", error);
+    throw new Error(`Grok API error: ${response.status}`);
+  }
+
+  const data = (await response.json()) as GrokResponse;
+  return data.choices[0]?.message?.content || "";
+}
+
+// Call Grok API WITHOUT search (much cheaper - use for writing)
+async function callGrokBasic(
+  messages: GrokMessage[],
+  maxTokens: number = 2000,
+  temperature: number = 0.5
+): Promise<string> {
+  const apiKey = process.env.XAI_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("XAI_API_KEY is not configured");
+  }
+
+  const response = await fetch("https://api.x.ai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: "grok-3-latest",
+      messages,
       temperature,
       max_tokens: maxTokens,
     }),
@@ -198,7 +234,9 @@ async function writeArticle(story: StoryTopic, isLead: boolean): Promise<RawArti
     day: "numeric",
   });
 
-  const response = await callGrokWithSearch(
+  // Use basic (no search) for article writing - much cheaper
+  // Trade-off: No real-time X reactions, but still good articles
+  const response = await callGrokBasic(
     [
       {
         role: "system",
@@ -208,10 +246,10 @@ Today's date is ${today}.
 OUR MISSION: American news FOR Americans. We hold the government ACCOUNTABLE to the people who pay their salaries.
 
 CRITICAL RULES:
-1. NEVER FABRICATE QUOTES - Do NOT make up quotes from fictional people ("Maria Gonzalez, a diner owner, told The American Standard..."). We have no reporters. Only use:
-   - Real quotes from X posts (with @handles)
+1. NEVER FABRICATE QUOTES - Do NOT make up quotes from fictional people. Only use:
    - Official statements from named officials
-   - Data from cited reports
+   - Data from cited reports/studies
+   - General public sentiment (not fake individual quotes)
 2. ACTIONS over PR - What did they DO, not what they said/tweeted
 3. ACCOUNTABILITY - Name names. Who failed? Who's responsible?
 4. IMPACT - Every story must explain why Americans should care
@@ -219,11 +257,10 @@ CRITICAL RULES:
    - Use generation names - they're real, don't sanitize them
    - Present ECONOMIC REALITIES with DATA (housing costs, wages, debt, benefits)
    - Explain WHY there's tension without writing hit pieces on any generation
-   - A Boomer should be able to read it and understand the frustration without feeling attacked
    - Focus on POLICY failures and SYSTEMS, not blaming individuals
 
-BAD (fabricated): "John Smith, a construction worker in Texas, told The American Standard..."
-GOOD (real): "According to Bureau of Labor Statistics data..." or "@realworker posted on X: '...'"`,
+BAD: "John Smith, a construction worker in Texas, told The American Standard..."
+GOOD: "According to Bureau of Labor Statistics data..." or "Critics argue..."`,
       },
       {
         role: "user",
@@ -236,8 +273,6 @@ STRUCTURE:
 2. body: Details, context, government actions/failures. NO FAKE QUOTES.
 3. whatItMeansForYou: 2-3 sentences explaining the direct impact on everyday Americans (taxes, jobs, prices, safety, rights)
 
-DO NOT fabricate quotes from fictional people. Only use real X posts or official statements.
-
 Output as JSON only:
 {
   "headline": "Clear, specific headline",
@@ -245,32 +280,11 @@ Output as JSON only:
   "leadParagraph": "80-100 words - the key facts",
   "body": "250-350 words. Use \\n\\n between paragraphs. NO FABRICATED QUOTES.",
   "whatItMeansForYou": "2-3 sentences: How does this affect YOU as an American? Your wallet, your job, your family, your rights?",
-  "section": "${story.section}",
-  "viralVideos": [
-    {
-      "platform": "x",
-      "url": "https://x.com/user/status/123",
-      "description": "What the video shows",
-      "postedBy": "@handle"
-    }
-  ],
-  "xReactions": [
-    {
-      "handle": "@realusername",
-      "displayName": "Real Display Name",
-      "quote": "Their actual post content from X",
-      "url": "https://x.com/username/status/123456789",
-      "verified": true,
-      "likes": "12.5K",
-      "reposts": "3.2K"
-    }
-  ]
-}
-
-Find 3-5 REAL X posts about this story. These must be actual posts you found, not fabricated.`,
+  "section": "${story.section}"
+}`,
       },
     ],
-    2500,
+    2000,
     0.5
   );
 
@@ -384,8 +398,8 @@ async function generateArticles(): Promise<Article[]> {
   // PHASE 1: Get trending stories
   const stories = await getTrendingStories();
 
-  // Write up to 30 stories for comprehensive coverage
-  const storiesToWrite = stories.slice(0, 30);
+  // Write up to 15 stories (balance coverage vs API cost)
+  const storiesToWrite = stories.slice(0, 15);
 
   // PHASE 2: Write articles in parallel (batches of 5 to balance speed and rate limits)
   const articles: Article[] = [];
@@ -439,12 +453,12 @@ async function generateArticles(): Promise<Article[]> {
     }
   }
 
-  console.log(`Generated ${articles.length} articles, now adding media watch...`);
+  console.log(`Generated ${articles.length} articles`);
 
-  // PHASE 3: Add media watch to top 3 articles (most important stories)
-  // Run in parallel batches of 3 to save time
+  // PHASE 3: Media Watch - DISABLED to save API costs
+  // Uncomment when budget allows (~$1-2 extra per generation)
+  /*
   const articlesToCheck = articles.slice(0, 3);
-  
   for (let i = 0; i < articlesToCheck.length; i += 2) {
     const batch = articlesToCheck.slice(i, i + 2);
     const mediaWatchPromises = batch.map(async (article) => {
@@ -455,13 +469,12 @@ async function generateArticles(): Promise<Article[]> {
       );
       article.mediaWatch = mediaWatch.length > 0 ? mediaWatch : undefined;
     });
-    
     await Promise.all(mediaWatchPromises);
-    
     if (i + 2 < articlesToCheck.length) {
       await new Promise((resolve) => setTimeout(resolve, 300));
     }
   }
+  */
 
   // Clean up temporary storyTopic field
   const cleanedArticles = articles.map(({ ...article }) => {
@@ -469,7 +482,6 @@ async function generateArticles(): Promise<Article[]> {
     return clean;
   });
 
-  console.log(`Generated ${cleanedArticles.length} articles with media watch`);
   return cleanedArticles;
 }
 
