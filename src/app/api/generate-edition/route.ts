@@ -51,14 +51,15 @@ async function callGrokAPI(messages: GrokMessage[]): Promise<string> {
       search_parameters: {
         mode: "on", // Force search to be used
         sources: [
-          { type: "x" },      // Search X/Twitter for real-time buzz
-          { type: "news" },   // Search news sources
+          { type: "x", post_view_count: 1000 },  // X posts with 1K+ views
+          { type: "news" },   // News sources
+          { type: "web" },    // Web sources
         ],
-        max_search_results: 10, // Limit sources to speed up
+        max_search_results: 25, // More sources for better coverage
         return_citations: true,
       },
-      temperature: 0.5, // Lower temp for more consistent JSON output
-      max_tokens: 4000, // Reduced for faster response
+      temperature: 0.6, // Balanced for variety and consistency
+      max_tokens: 8000, // More tokens for 6-8 detailed articles
     }),
   });
 
@@ -81,39 +82,48 @@ async function generateArticles(): Promise<Article[]> {
 
   const systemPrompt = `You are a professional newspaper editor for "The American Standard," a trusted American daily newspaper with the tagline "Clear. Fair. American."
 
-Your task is to create today's edition based on the real-time news and X/Twitter data provided to you. Write 4-5 neutral, classic newspaper articles covering the most important US political stories of the day.
+Your task is to create today's edition based on TRENDING and VIRAL stories from X/Twitter and breaking news. Focus on stories that are getting significant engagement and discussion RIGHT NOW.
+
+IMPORTANT: Prioritize stories that are:
+- TRENDING on X with high post counts (10K+ posts)
+- Breaking news in the last 24-48 hours
+- Generating significant public debate or outrage
+- Major political scandals, investigations, or developments
 
 Style guidelines:
 - Write in a traditional, authoritative newspaper voice
 - Be politically neutral and fair to all sides
 - Focus on facts, not sensationalism
 - Use proper journalistic structure (inverted pyramid)
-- Each article should be 200-400 words
-- Include relevant quotes when available
-
-Article format:
-- Headline: Clear, informative, not clickbait
-- Subheadline (optional): Additional context
-- Lead paragraph: Who, what, when, where, why
-- Body: Background, quotes, analysis
+- Each article should be 250-400 words
+- Include specific details, names, numbers, and quotes when available
 
 Sections to use:
-- "National Politics" - Major federal/national stories
+- "National Politics" - Federal government, Congress, White House
 - "Washington Briefs" - DC-focused shorter items
-- "State & Local" - State government, regional news
+- "State & Local" - State government, regional news, local scandals
 
 IMPORTANT: All articles must be credited to "The American Standard Staff".`;
 
   const userPrompt = `Generate today's edition for ${today}.
 
-Write 4 articles about today's top US political stories. ONLY output valid JSON:
+Search for the TOP TRENDING political stories on X/Twitter right now. Look for:
+- Stories with 10K+ posts trending
+- Major scandals or investigations (fraud, corruption, etc.)
+- Breaking political news
+- Viral political moments
+- State and local stories getting national attention
+
+Write 6-8 articles covering the MOST TALKED ABOUT stories. Include specific details like names, dollar amounts, locations, and quotes.
+
+ONLY output valid JSON:
 {
   "articles": [
     {
-      "headline": "Headline here",
-      "subheadline": "Subheadline or null",
-      "leadParagraph": "50-word opening with key facts",
-      "body": "200-300 word body, paragraphs separated by \\n\\n",
+      "headline": "Specific, detailed headline with key facts",
+      "subheadline": "Additional context or null",
+      "leadParagraph": "60-80 word opening with who, what, when, where, why",
+      "body": "250-350 word body with details, quotes, and context. Paragraphs separated by \\n\\n",
       "section": "National Politics|Washington Briefs|State & Local",
       "isLeadStory": true
     }
