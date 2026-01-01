@@ -12,13 +12,13 @@ export function XReactions({ reactions }: XReactionsProps) {
   return (
     <div className="mt-10 pt-8 border-t border-rule">
       <div className="flex items-center gap-2 mb-6">
-        <span className="text-2xl">𝕏</span>
-        <div>
-          <h3 className="font-headline text-xl font-bold">Americans React</h3>
-          <p className="text-sm text-muted-foreground">
-            What people are saying about this story
-          </p>
-        </div>
+          <span className="text-2xl">🇺🇸</span>
+          <div>
+            <h3 className="font-headline text-xl font-bold">America Reacts</h3>
+            <p className="text-sm text-muted-foreground">
+              The most controversial takes on X
+            </p>
+          </div>
       </div>
 
       <div className="space-y-4">

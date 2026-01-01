@@ -234,9 +234,8 @@ async function writeArticle(story: StoryTopic, isLead: boolean): Promise<RawArti
     day: "numeric",
   });
 
-  // Use basic (no search) for article writing - much cheaper
-  // Trade-off: No real-time X reactions, but still good articles
-  const response = await callGrokBasic(
+  // Use search for accuracy + X Reactions (Media Watch disabled separately to save costs)
+  const response = await callGrokWithSearch(
     [
       {
         role: "system",
@@ -246,21 +245,11 @@ Today's date is ${today}.
 OUR MISSION: American news FOR Americans. We hold the government ACCOUNTABLE to the people who pay their salaries.
 
 CRITICAL RULES:
-1. NEVER FABRICATE QUOTES - Do NOT make up quotes from fictional people. Only use:
-   - Official statements from named officials
-   - Data from cited reports/studies
-   - General public sentiment (not fake individual quotes)
+1. NEVER FABRICATE QUOTES - Only use real quotes you find from X posts or official statements
 2. ACTIONS over PR - What did they DO, not what they said/tweeted
 3. ACCOUNTABILITY - Name names. Who failed? Who's responsible?
 4. IMPACT - Every story must explain why Americans should care
-5. GENERATIONAL TOPICS - When covering Boomers, Gen X, Millennials, Gen Z:
-   - Use generation names - they're real, don't sanitize them
-   - Present ECONOMIC REALITIES with DATA (housing costs, wages, debt, benefits)
-   - Explain WHY there's tension without writing hit pieces on any generation
-   - Focus on POLICY failures and SYSTEMS, not blaming individuals
-
-BAD: "John Smith, a construction worker in Texas, told The American Standard..."
-GOOD: "According to Bureau of Labor Statistics data..." or "Critics argue..."`,
+5. GENERATIONAL TOPICS - Use real generation names (Boomers, Gen X, Millennials, Gen Z), present economic realities with data, focus on policy failures not blame`,
       },
       {
         role: "user",
@@ -270,21 +259,35 @@ Context: ${story.description}
 
 STRUCTURE:
 1. leadParagraph: The key facts (who, what, when, specific numbers)
-2. body: Details, context, government actions/failures. NO FAKE QUOTES.
-3. whatItMeansForYou: 2-3 sentences explaining the direct impact on everyday Americans (taxes, jobs, prices, safety, rights)
+2. body: Details, context, government actions/failures
+3. whatItMeansForYou: 2-3 sentences on direct impact to everyday Americans
+4. xReactions: Find the 5 MOST CONTROVERSIAL reactions on X - posts that sparked debate, got people fired up, or show the divide
 
 Output as JSON only:
 {
   "headline": "Clear, specific headline",
   "subheadline": "Additional context or null",
   "leadParagraph": "80-100 words - the key facts",
-  "body": "250-350 words. Use \\n\\n between paragraphs. NO FABRICATED QUOTES.",
-  "whatItMeansForYou": "2-3 sentences: How does this affect YOU as an American? Your wallet, your job, your family, your rights?",
-  "section": "${story.section}"
-}`,
+  "body": "250-350 words. Use \\n\\n between paragraphs.",
+  "whatItMeansForYou": "2-3 sentences: How does this affect YOU as an American?",
+  "section": "${story.section}",
+  "xReactions": [
+    {
+      "handle": "@realusername",
+      "displayName": "Display Name", 
+      "quote": "Their controversial/viral post from X",
+      "url": "https://x.com/username/status/123456789",
+      "verified": true,
+      "likes": "12.5K",
+      "reposts": "3.2K"
+    }
+  ]
+}
+
+For xReactions: Find posts that are HOT TAKES, controversial opinions, or sparked major debate. Show the divide.`,
       },
     ],
-    2000,
+    2500,
     0.5
   );
 
