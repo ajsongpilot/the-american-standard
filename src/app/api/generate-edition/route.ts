@@ -46,6 +46,15 @@ interface RawArticle {
     url: string;
     source: string;
   }>;
+  xReactions?: Array<{
+    handle: string;
+    displayName?: string;
+    quote: string;
+    url?: string;
+    likes?: string;
+    reposts?: string;
+    verified?: boolean;
+  }>;
 }
 
 interface RawMediaCheck {
@@ -169,63 +178,64 @@ async function writeArticle(story: StoryTopic, isLead: boolean): Promise<RawArti
         content: `You are a newspaper journalist for The American Standard ("Clear. Fair. American.").
 Today's date is ${today}.
 
-YOUR MISSION: Write about what's TRENDING on X - the stories Americans are actually talking about, not just what mainstream news is covering.
+ARTICLE STYLE:
+- Write like a TRADITIONAL NEWSPAPER - facts, sources, context
+- The article body should read like real journalism, NOT like "so-and-so on X said..."
+- Minimal @handles in the body - save those for the separate xReactions section
+- Be specific: names, dollar amounts, dates, locations
+- Mention "Americans are reacting" but don't fill the body with X quotes
 
-WRITING STYLE:
-- Traditional newspaper voice, inverted pyramid structure
-- Say "Americans" not "users on X" or "social media users"
-- Quote real people by name or @handle to show what's being said on X
-- Be specific: include names, dollar amounts, dates, locations
-- Capture WHY this topic is trending - what's making people react
-
-TONE:
-- Neutral and factual in reporting
-- Show how Americans are reacting and feeling
-- Include direct quotes from real people on X who are driving the conversation`,
+The X reactions will be displayed separately in their own section, so don't clutter the article with them.`,
       },
       {
         role: "user",
-        content: `Write a ${isLead ? "500" : "400"}-word newspaper article about this TRENDING topic: ${story.title}
+        content: `Write a ${isLead ? "500" : "400"}-word newspaper article about: ${story.title}
 
-Why it's trending: ${story.description}
+Context: ${story.description}
 
-This topic is trending on X right now. Write an article that:
-1. Explains the story with key facts: who, what, when, where, specific numbers
-2. Shows WHY Americans on X are talking about this - what's driving the conversation
-3. Includes quotes from X posts (@handles) showing how people are reacting
-4. Covers any new developments that sparked the trending discussion
-5. Explains why this matters to everyday Americans
+STRUCTURE YOUR OUTPUT:
+1. "body" = Traditional journalism. Facts, context, quotes from officials/sources. Minimal @handles.
+2. "xReactions" = Separate array of X posts reacting to the story (these display in their own section)
 
-The article should feel relevant to TODAY even if the underlying story is ongoing.
+Write the BODY like a newspaper article - don't fill it with "@username said..." 
+Put those reactions in the xReactions array instead.
 
 Output as JSON only:
 {
-  "headline": "Traditional newspaper headline about the STORY (don't mention X in headline)",
+  "headline": "Traditional newspaper headline (no X/Twitter mention)",
   "subheadline": "Additional context or null",
-  "leadParagraph": "80-100 words explaining the story",
-  "body": "300-400 words with facts, X quotes with @handles, context. Use \\n\\n between paragraphs.",
+  "leadParagraph": "80-100 words - the key facts",
+  "body": "300-400 words of JOURNALISM - facts, official quotes, context. NOT a list of X reactions. Use \\n\\n between paragraphs.",
   "section": "${story.section}",
   "viralVideos": [
     {
-      "platform": "x or youtube",
-      "url": "actual URL to the video",
+      "platform": "x",
+      "url": "https://x.com/user/status/123",
       "description": "What the video shows",
-      "postedBy": "@handle or channel"
+      "postedBy": "@handle"
     }
   ],
   "relatedLinks": [
     {
       "title": "Article headline",
       "url": "actual URL",
-      "source": "Star Tribune, Fox News, etc."
+      "source": "Source name"
+    }
+  ],
+  "xReactions": [
+    {
+      "handle": "@username",
+      "displayName": "Display Name",
+      "quote": "Their full post content",
+      "verified": true,
+      "likes": "12.5K",
+      "reposts": "3.2K"
     }
   ]
 }
 
-IMPORTANT: 
-- Headlines should be traditional newspaper style - about the STORY, not about X
-- Include viral VIDEOS being shared about this story (X videos, YouTube)
-- Include related articles from other news sources`,
+Find 3-5 real X posts reacting to this story for xReactions.
+Headlines should be traditional newspaper style - about the STORY.`,
       },
     ],
     2500,
@@ -375,6 +385,15 @@ async function generateArticles(): Promise<Article[]> {
             source: l.source,
             stance: "neutral" as const,
           })) as Article["relatedLinks"],
+          xReactions: raw.xReactions?.filter(r => r.handle && r.quote)?.map(r => ({
+            handle: r.handle.startsWith("@") ? r.handle : `@${r.handle}`,
+            displayName: r.displayName,
+            quote: r.quote,
+            url: r.url,
+            likes: r.likes,
+            reposts: r.reposts,
+            verified: r.verified,
+          })) as Article["xReactions"],
         }))
         .catch((err) => {
           console.error(`Failed to write article for: ${story.title}`, err);

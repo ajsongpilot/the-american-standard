@@ -31,6 +31,17 @@ export interface ViralVideo {
   url: string;
   description: string;
   postedBy?: string;  // @handle or channel name
+  thumbnailUrl?: string;  // Preview image
+}
+
+export interface XReaction {
+  handle: string;       // @username
+  displayName?: string; // "Nick Sortor"
+  quote: string;        // The actual post content
+  url?: string;         // Link to the post
+  likes?: string;       // "12.5K"
+  reposts?: string;     // "3.2K"
+  verified?: boolean;   // Blue check
 }
 
 export interface RelatedLink {
@@ -56,6 +67,7 @@ export interface Article {
   mediaWatch?: MediaCheck[];  // Bias checks on other outlets
   viralVideos?: ViralVideo[];  // Videos being shared about this story
   relatedLinks?: RelatedLink[];  // Related coverage from other sources
+  xReactions?: XReaction[];  // X posts reacting to the story
 }
 
 export interface Edition {

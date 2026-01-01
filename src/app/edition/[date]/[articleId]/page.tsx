@@ -4,6 +4,7 @@ import Image from "next/image";
 import { Masthead, Footer } from "@/components/newspaper";
 import { MediaWatch } from "@/components/MediaWatch";
 import { ViralContent } from "@/components/ViralContent";
+import { XReactions } from "@/components/XReactions";
 import { getEdition } from "@/lib/kv";
 import { formatEditionDate } from "@/types/edition";
 
@@ -155,6 +156,13 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <p key={idx}>{paragraph}</p>
             ))}
           </div>
+
+          {/* X Reactions - What Americans are saying */}
+          {article.xReactions && article.xReactions.length > 0 && (
+            <div className="not-prose">
+              <XReactions reactions={article.xReactions} />
+            </div>
+          )}
 
           {/* Viral Videos & Related Links */}
           {(article.viralVideos?.length || article.relatedLinks?.length) && (
