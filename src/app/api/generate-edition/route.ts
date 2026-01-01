@@ -49,13 +49,13 @@ async function callGrokAPI(messages: GrokMessage[]): Promise<string> {
       messages,
       // Use search_parameters for Live Search (web, news, X)
       search_parameters: {
-        mode: "on", // Force search to be used
+        mode: "on",
         sources: [
-          { type: "x", post_view_count: 5000 },  // X posts with 5K+ views (viral content)
-          { type: "x" },       // General X search
+          { type: "x" },       // X/Twitter search for trending topics
           { type: "news" },    // News sources
+          { type: "web" },     // Web search
         ],
-        max_search_results: 40, // More sources for better trending coverage
+        max_search_results: 30,
         return_citations: true,
       },
       temperature: 0.7, // Higher for more variety in story selection
@@ -65,11 +65,14 @@ async function callGrokAPI(messages: GrokMessage[]): Promise<string> {
 
   if (!response.ok) {
     const error = await response.text();
+    console.error("Grok API error response:", error);
     throw new Error(`Grok API error: ${response.status} - ${error}`);
   }
 
   const data = (await response.json()) as GrokResponse;
-  return data.choices[0]?.message?.content || "";
+  const content = data.choices[0]?.message?.content || "";
+  console.log("Grok response length:", content.length);
+  return content;
 }
 
 async function generateArticles(): Promise<Article[]> {
@@ -149,11 +152,14 @@ Output ONLY valid JSON.`;
     // Try to extract JSON from the response
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
+      console.error("No JSON found in response. First 500 chars:", response.substring(0, 500));
       throw new Error("No JSON found in response");
     }
     articlesData = JSON.parse(jsonMatch[0]) as { articles: RawArticle[] };
+    console.log("Parsed articles count:", articlesData.articles?.length || 0);
   } catch (parseError) {
     console.error("Failed to parse Grok response:", parseError);
+    console.error("Response preview:", response.substring(0, 1000));
     throw new Error("Failed to parse article data from AI response");
   }
 
