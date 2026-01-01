@@ -94,9 +94,9 @@ async function callGrokWithSearch(
   return data.choices[0]?.message?.content || "";
 }
 
-// PHASE 1: Get list of TODAY'S top stories
+// PHASE 1: Get what's TRENDING on X right now
 async function getTrendingStories(): Promise<StoryTopic[]> {
-  console.log("Phase 1: Fetching today's top stories...");
+  console.log("Phase 1: Fetching what's TRENDING on X...");
 
   const today = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -109,33 +109,31 @@ async function getTrendingStories(): Promise<StoryTopic[]> {
     [
       {
         role: "user",
-        content: `Today is ${today}. What are the top 12 UNITED STATES political news stories happening RIGHT NOW or in the last 24-48 hours?
+        content: `Today is ${today}. What US political topics are TRENDING and VIRAL on X/Twitter RIGHT NOW?
 
-IMPORTANT REQUIREMENTS:
-1. Only US/American political news - no international stories unless they directly involve US policy
-2. Fresh news from TODAY or YESTERDAY, not old stories from weeks/months ago
-3. Focus on what Americans care about
+THE X FACTOR: I want stories that Americans on X are actually talking about, sharing, and debating TODAY. Look at:
+- Trending hashtags and topics on X
+- Posts with massive engagement (likes, reposts, replies) 
+- Stories generating heated debate and viral threads
+- Topics with 10K, 50K, 100K+ posts
+- What's making people OUTRAGED, EXCITED, or DIVIDED on X right now
 
-Search X/Twitter and US news for:
-- Breaking US political news from the last 24-48 hours
-- Trump administration actions, announcements, or controversies
-- Congressional activity, legislation, hearings
-- Federal investigations, DOJ/FBI actions
-- State-level political news (governors, state legislatures, local scandals)
-- US economic policy, trade, immigration enforcement
-- New developments in ongoing US stories
+This could include:
+- ONGOING scandals that are trending again (fraud investigations, corruption probes)
+- Breaking news everyone is reacting to
+- Viral moments and controversies
+- Stories the mainstream media is ignoring but X is amplifying
+- State-level stories getting national X attention (Minnesota fraud, etc.)
 
-DO NOT include:
-- International news (India, Australia, UK, etc.) unless it's about US policy
-- Events from weeks or months ago unless there's a NEW development TODAY
+Focus on US politics only. Find what's ACTUALLY TRENDING on X, not just what news outlets are publishing.
 
-For each story provide:
-1. A specific title about US politics with what happened and WHEN
-2. A one-sentence description of the NEW development
+For each trending topic (find 10-12):
+1. The topic/story that's trending (be specific - names, places, numbers)
+2. Why it's trending on X right now (new development, viral post, etc.)
 3. Category: "National Politics", "Washington Briefs", or "State & Local"
 
 Output as JSON only:
-{"stories": [{"title": "...", "description": "...", "section": "..."}]}`,
+{"stories": [{"title": "...", "description": "Why this is trending on X right now", "section": "..."}]}`,
       },
     ],
     3000,
@@ -172,39 +170,41 @@ async function writeArticle(story: StoryTopic, isLead: boolean): Promise<RawArti
         content: `You are a newspaper journalist for The American Standard ("Clear. Fair. American.").
 Today's date is ${today}.
 
+YOUR MISSION: Write about what's TRENDING on X - the stories Americans are actually talking about, not just what mainstream news is covering.
+
 WRITING STYLE:
 - Traditional newspaper voice, inverted pyramid structure
 - Say "Americans" not "users on X" or "social media users"
-- Quote real people by name or @handle to show public sentiment
+- Quote real people by name or @handle to show what's being said on X
 - Be specific: include names, dollar amounts, dates, locations
-- Focus on what happened TODAY or in the last 24-48 hours
+- Capture WHY this topic is trending - what's making people react
 
 TONE:
 - Neutral and factual in reporting
 - Show how Americans are reacting and feeling
-- Include direct quotes from real people on X`,
+- Include direct quotes from real people on X who are driving the conversation`,
       },
       {
         role: "user",
-        content: `Write a ${isLead ? "500" : "400"}-word newspaper article about: ${story.title}
+        content: `Write a ${isLead ? "500" : "400"}-word newspaper article about this TRENDING topic: ${story.title}
 
-${story.description}
+Why it's trending: ${story.description}
 
-IMPORTANT: Focus on the LATEST developments. What happened TODAY or YESTERDAY? Don't rehash old events unless there's a new development.
+This topic is trending on X right now. Write an article that:
+1. Explains the story with key facts: who, what, when, where, specific numbers
+2. Shows WHY Americans on X are talking about this - what's driving the conversation
+3. Includes quotes from X posts (@handles) showing how people are reacting
+4. Covers any new developments that sparked the trending discussion
+5. Explains why this matters to everyday Americans
 
-Include:
-1. The key facts: who, what, when (use TODAY, YESTERDAY, or specific recent dates), where, specific numbers
-2. Names of officials, agencies, or figures involved
-3. How Americans are reacting NOW (find recent quotes from X posts with @handles or names)
-4. Multiple perspectives if the issue is divisive
-5. Why this matters to everyday Americans
+The article should feel relevant to TODAY even if the underlying story is ongoing.
 
 Output as JSON only:
 {
-  "headline": "Compelling headline emphasizing the NEW development",
+  "headline": "Compelling headline that captures why this is trending",
   "subheadline": "Additional context or null",
-  "leadParagraph": "80-100 word opening paragraph covering what happened TODAY/recently",
-  "body": "300-400 words with details, quotes from Americans, context. Use \\n\\n between paragraphs.",
+  "leadParagraph": "80-100 words explaining the story and why Americans are talking about it",
+  "body": "300-400 words with facts, X quotes with @handles, and context. Use \\n\\n between paragraphs.",
   "section": "${story.section}"
 }`,
       },
