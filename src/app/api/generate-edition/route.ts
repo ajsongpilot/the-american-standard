@@ -284,7 +284,8 @@ Output as JSON only:
   ]
 }
 
-For xReactions: Find posts that are HOT TAKES, controversial opinions, or sparked major debate. Show the divide.`,
+For xReactions: Find 5 posts from 5 DIFFERENT VERIFIED users (blue checkmarks). Not the same person multiple times. Get controversial hot takes from notable accounts that show the divide.
+`,
       },
     ],
     2500,
