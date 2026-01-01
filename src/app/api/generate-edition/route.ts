@@ -59,7 +59,7 @@ async function callGrokAPI(messages: GrokMessage[]): Promise<string> {
         return_citations: true,
       },
       temperature: 0.7, // Higher for more variety in story selection
-      max_tokens: 12000, // More tokens for 8-10 detailed articles
+      max_tokens: 16000, // More tokens for 8-10 detailed articles with quotes
     }),
   });
 
@@ -82,61 +82,61 @@ async function generateArticles(): Promise<Article[]> {
 
   const systemPrompt = `You are a newspaper editor for "The American Standard" with the tagline "Clear. Fair. American."
 
-YOUR PRIMARY JOB: Find what's ACTUALLY TRENDING and VIRAL on X/Twitter right now, then write newspaper articles about those topics.
+YOUR PRIMARY JOB: Find what's TRENDING and VIRAL on X/Twitter right now, capture HOW AMERICANS ARE FEELING about these stories, and write engaging newspaper articles.
 
-DO NOT write generic news summaries. Instead:
+KEY PRINCIPLES:
 1. Search X for what people are ACTUALLY talking about RIGHT NOW
-2. Look at trending topics, viral posts, hashtags with high engagement
-3. Find the stories with 10K, 50K, 100K+ posts
-4. Include controversial topics that are generating debate
-5. Cover scandals, fraud investigations, political drama, viral moments
+2. Find stories with massive engagement (10K, 50K, 100K+ posts)
+3. CAPTURE THE EMOTION - are people outraged? Celebrating? Divided? Skeptical?
+4. QUOTE REAL X USERS by their @handle with their actual posts
+5. Cover scandals, fraud, controversies, viral moments, political drama
 
-Write like a traditional newspaper but cover what's TRENDING, not just what's "newsworthy" in a traditional sense. If people on X are talking about something, we should cover it.
+Your articles should feel like a blend of traditional journalism AND a pulse check on American sentiment. Readers should understand both WHAT happened and HOW PEOPLE ARE REACTING.
 
-Style: Traditional newspaper voice, politically neutral, factual, inverted pyramid structure.
-Article length: 300-450 words each with specific names, numbers, quotes, and details.
+Style: Traditional newspaper voice but with real quotes from X users showing public reaction.
+Article length: 350-500 words with specific names, numbers, X user quotes with @handles.
 
 Sections: "National Politics", "Washington Briefs", "State & Local"`;
 
   const userPrompt = `Generate today's edition for ${today}.
 
-STEP 1: Search X/Twitter for what's TRENDING right now. Look at:
-- Trending topics and hashtags
-- Posts with massive engagement (likes, reposts, replies)
-- Political controversies and debates happening NOW
-- Viral moments, scandals, investigations
-- Stories people are angry or excited about
+STEP 1: Search X/Twitter for what's TRENDING right now:
+- Trending topics and hashtags with high post counts
+- Viral posts generating massive engagement
+- Political controversies sparking heated debate
+- Stories making people ANGRY, EXCITED, WORRIED, or HOPEFUL
+- Scandals, investigations, fraud cases, political drama
 
-STEP 2: Identify the 8-10 BIGGEST stories based on X engagement. Examples of what to look for:
-- Federal investigations and fraud cases (like Medicaid fraud, government waste)
-- Political figures doing controversial things
-- Breaking news that's going viral
-- State/local stories getting national attention on X
-- Policy debates generating outrage on either side
+STEP 2: For each story, capture THE EMOTIONAL REACTION:
+- What are people saying? Quote actual X users with their @handles
+- Are Americans outraged? Supportive? Divided? Mocking?
+- What's the sentiment breakdown - is it mostly one side or split?
+- Find the most viral/liked responses and reactions
 
-STEP 3: Write detailed articles about each. Include:
-- Specific names of people and organizations involved
-- Dollar amounts, dates, locations
-- Quotes from X posts or news sources
-- Why people are talking about this
-- Multiple perspectives when relevant
+STEP 3: Write 8-10 articles that include:
+- The facts: names, dates, dollar amounts, locations
+- THE PUBLIC REACTION: "Many Americans expressed outrage..." or "The post sparked celebration among..."
+- DIRECT QUOTES from X users: '@username wrote: "actual quote from their post"'
+- Multiple perspectives when the reaction is divided
+- Why this story is resonating emotionally with people
 
-Output 8-10 articles as JSON:
+Output as JSON:
 {
   "articles": [
     {
-      "headline": "Specific headline with key facts and names",
-      "subheadline": "More context or null",
-      "leadParagraph": "70-90 word opening covering who, what, when, where, why",
-      "body": "300-400 words with details, quotes, context. Use \\n\\n between paragraphs",
+      "headline": "Headline capturing both the story and the reaction",
+      "subheadline": "Context about public sentiment or null",
+      "leadParagraph": "80-100 words covering the story AND how Americans are reacting",
+      "body": "350-450 words with facts, X user quotes with @handles, emotional context. Use \\n\\n between paragraphs",
       "section": "National Politics|Washington Briefs|State & Local",
       "isLeadStory": true
     }
   ]
 }
 
-The FIRST article should be the #1 trending political story. Set isLeadStory: true for first, false for rest.
-Output ONLY valid JSON, nothing else.`;
+First article = #1 trending story (isLeadStory: true). Rest = false.
+INCLUDE REAL @usernames and their quotes in the articles.
+Output ONLY valid JSON.`;
 
   const response = await callGrokAPI([
     { role: "system", content: systemPrompt },
