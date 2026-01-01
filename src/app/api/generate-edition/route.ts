@@ -50,12 +50,6 @@ interface RawArticle {
     reposts?: string;
     verified?: boolean;
   }>;
-  featuredImage?: {
-    description: string;
-    sourceHandle: string;
-    sourceUrl: string;
-    imageUrl?: string;
-  };
 }
 
 interface RawMediaCheck {
@@ -226,17 +220,11 @@ Output as JSON only:
       "likes": "12.5K",
       "reposts": "3.2K"
     }
-  ],
-  "featuredImage": {
-    "description": "What the image shows",
-    "sourceHandle": "@username",
-    "sourceUrl": "https://x.com/username/status/123456789"
-  }
+  ]
 }
 
 Find 3-5 real X posts reacting to this story for xReactions.
 IMPORTANT: Include the actual post URL (x.com/user/status/ID) when you can find it.
-IMPORTANT: Find one X post that contains a REAL IMAGE (photo/screenshot) related to this story for featuredImage. Credit the original poster.
 Headlines should be traditional newspaper style - about the STORY.`,
       },
     ],

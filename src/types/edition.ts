@@ -34,12 +34,6 @@ export interface ViralVideo {
   thumbnailUrl?: string;  // Preview image
 }
 
-export interface FeaturedImage {
-  description: string;       // What the image shows
-  sourceHandle: string;      // @username who posted it
-  sourceUrl: string;         // Link to the original X post
-  imageUrl?: string;         // Direct image URL if available
-}
 
 export interface XReaction {
   handle: string;       // @username
@@ -75,7 +69,6 @@ export interface Article {
   viralVideos?: ViralVideo[];  // Videos being shared about this story
   relatedLinks?: RelatedLink[];  // Related coverage from other sources
   xReactions?: XReaction[];  // X posts reacting to the story
-  featuredImage?: FeaturedImage;  // Real image from X with credit
 }
 
 export interface Edition {

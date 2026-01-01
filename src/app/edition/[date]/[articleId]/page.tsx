@@ -5,7 +5,6 @@ import { Masthead, Footer } from "@/components/newspaper";
 import { MediaWatch } from "@/components/MediaWatch";
 import { ViralContent } from "@/components/ViralContent";
 import { XReactions } from "@/components/XReactions";
-import { FeaturedImage } from "@/components/FeaturedImage";
 import { getEdition } from "@/lib/kv";
 import { formatEditionDate } from "@/types/edition";
 
