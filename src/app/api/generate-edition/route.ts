@@ -51,15 +51,15 @@ async function callGrokAPI(messages: GrokMessage[]): Promise<string> {
       search_parameters: {
         mode: "on", // Force search to be used
         sources: [
-          { type: "x", post_view_count: 1000 },  // X posts with 1K+ views
-          { type: "news" },   // News sources
-          { type: "web" },    // Web sources
+          { type: "x", post_view_count: 5000 },  // X posts with 5K+ views (viral content)
+          { type: "x" },       // General X search
+          { type: "news" },    // News sources
         ],
-        max_search_results: 25, // More sources for better coverage
+        max_search_results: 40, // More sources for better trending coverage
         return_citations: true,
       },
-      temperature: 0.6, // Balanced for variety and consistency
-      max_tokens: 8000, // More tokens for 6-8 detailed articles
+      temperature: 0.7, // Higher for more variety in story selection
+      max_tokens: 12000, // More tokens for 8-10 detailed articles
     }),
   });
 
@@ -80,57 +80,63 @@ async function generateArticles(): Promise<Article[]> {
     day: "numeric",
   });
 
-  const systemPrompt = `You are a professional newspaper editor for "The American Standard," a trusted American daily newspaper with the tagline "Clear. Fair. American."
+  const systemPrompt = `You are a newspaper editor for "The American Standard" with the tagline "Clear. Fair. American."
 
-Your task is to create today's edition based on TRENDING and VIRAL stories from X/Twitter and breaking news. Focus on stories that are getting significant engagement and discussion RIGHT NOW.
+YOUR PRIMARY JOB: Find what's ACTUALLY TRENDING and VIRAL on X/Twitter right now, then write newspaper articles about those topics.
 
-IMPORTANT: Prioritize stories that are:
-- TRENDING on X with high post counts (10K+ posts)
-- Breaking news in the last 24-48 hours
-- Generating significant public debate or outrage
-- Major political scandals, investigations, or developments
+DO NOT write generic news summaries. Instead:
+1. Search X for what people are ACTUALLY talking about RIGHT NOW
+2. Look at trending topics, viral posts, hashtags with high engagement
+3. Find the stories with 10K, 50K, 100K+ posts
+4. Include controversial topics that are generating debate
+5. Cover scandals, fraud investigations, political drama, viral moments
 
-Style guidelines:
-- Write in a traditional, authoritative newspaper voice
-- Be politically neutral and fair to all sides
-- Focus on facts, not sensationalism
-- Use proper journalistic structure (inverted pyramid)
-- Each article should be 250-400 words
-- Include specific details, names, numbers, and quotes when available
+Write like a traditional newspaper but cover what's TRENDING, not just what's "newsworthy" in a traditional sense. If people on X are talking about something, we should cover it.
 
-Sections to use:
-- "National Politics" - Federal government, Congress, White House
-- "Washington Briefs" - DC-focused shorter items
-- "State & Local" - State government, regional news, local scandals
+Style: Traditional newspaper voice, politically neutral, factual, inverted pyramid structure.
+Article length: 300-450 words each with specific names, numbers, quotes, and details.
 
-IMPORTANT: All articles must be credited to "The American Standard Staff".`;
+Sections: "National Politics", "Washington Briefs", "State & Local"`;
 
   const userPrompt = `Generate today's edition for ${today}.
 
-Search for the TOP TRENDING political stories on X/Twitter right now. Look for:
-- Stories with 10K+ posts trending
-- Major scandals or investigations (fraud, corruption, etc.)
-- Breaking political news
-- Viral political moments
-- State and local stories getting national attention
+STEP 1: Search X/Twitter for what's TRENDING right now. Look at:
+- Trending topics and hashtags
+- Posts with massive engagement (likes, reposts, replies)
+- Political controversies and debates happening NOW
+- Viral moments, scandals, investigations
+- Stories people are angry or excited about
 
-Write 6-8 articles covering the MOST TALKED ABOUT stories. Include specific details like names, dollar amounts, locations, and quotes.
+STEP 2: Identify the 8-10 BIGGEST stories based on X engagement. Examples of what to look for:
+- Federal investigations and fraud cases (like Medicaid fraud, government waste)
+- Political figures doing controversial things
+- Breaking news that's going viral
+- State/local stories getting national attention on X
+- Policy debates generating outrage on either side
 
-ONLY output valid JSON:
+STEP 3: Write detailed articles about each. Include:
+- Specific names of people and organizations involved
+- Dollar amounts, dates, locations
+- Quotes from X posts or news sources
+- Why people are talking about this
+- Multiple perspectives when relevant
+
+Output 8-10 articles as JSON:
 {
   "articles": [
     {
-      "headline": "Specific, detailed headline with key facts",
-      "subheadline": "Additional context or null",
-      "leadParagraph": "60-80 word opening with who, what, when, where, why",
-      "body": "250-350 word body with details, quotes, and context. Paragraphs separated by \\n\\n",
+      "headline": "Specific headline with key facts and names",
+      "subheadline": "More context or null",
+      "leadParagraph": "70-90 word opening covering who, what, when, where, why",
+      "body": "300-400 words with details, quotes, context. Use \\n\\n between paragraphs",
       "section": "National Politics|Washington Briefs|State & Local",
       "isLeadStory": true
     }
   ]
 }
 
-First article is lead story (isLeadStory: true), rest are false. Output ONLY JSON.`;
+The FIRST article should be the #1 trending political story. Set isLeadStory: true for first, false for rest.
+Output ONLY valid JSON, nothing else.`;
 
   const response = await callGrokAPI([
     { role: "system", content: systemPrompt },
