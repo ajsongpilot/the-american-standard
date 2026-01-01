@@ -35,6 +35,17 @@ interface RawArticle {
   leadParagraph: string;
   body: string;
   section: string;
+  viralVideos?: Array<{
+    platform: string;
+    url: string;
+    description: string;
+    postedBy?: string;
+  }>;
+  relatedLinks?: Array<{
+    title: string;
+    url: string;
+    source: string;
+  }>;
 }
 
 interface RawMediaCheck {
@@ -94,46 +105,34 @@ async function callGrokWithSearch(
   return data.choices[0]?.message?.content || "";
 }
 
-// PHASE 1: Get what's TRENDING on X right now
+// PHASE 1: Get TRENDING stories from X
 async function getTrendingStories(): Promise<StoryTopic[]> {
-  console.log("Phase 1: Fetching what's TRENDING on X...");
-
-  const today = new Date().toLocaleDateString("en-US", {
-    weekday: "long",
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
+  console.log("Phase 1: Fetching TRENDING stories from X...");
 
   const response = await callGrokWithSearch(
     [
       {
         role: "user",
-        content: `Today is ${today}. What US political topics are TRENDING and VIRAL on X/Twitter RIGHT NOW?
+        content: `What are the top 12 trending US political stories on X/Twitter right now?
 
-THE X FACTOR: I want stories that Americans on X are actually talking about, sharing, and debating TODAY. Look at:
-- Trending hashtags and topics on X
-- Posts with massive engagement (likes, reposts, replies) 
-- Stories generating heated debate and viral threads
-- Topics with 10K, 50K, 100K+ posts
-- What's making people OUTRAGED, EXCITED, or DIVIDED on X right now
+Search X and news. I want the ACTUAL stories people are talking about, especially:
 
-This could include:
-- ONGOING scandals that are trending again (fraud investigations, corruption probes)
-- Breaking news everyone is reacting to
-- Viral moments and controversies
-- Stories the mainstream media is ignoring but X is amplifying
-- State-level stories getting national X attention (Minnesota fraud, etc.)
+1. FRAUD & SCANDALS - Minnesota Somali fraud, California budget fraud, any federal probes
+2. TRUMP ADMINISTRATION - actions, controversies, statements
+3. IMMIGRATION - ICE raids, deportations, sanctuary city battles  
+4. VIRAL VIDEOS being shared - especially videos exposing fraud, corruption, or hypocrisy
+5. FEDERAL INVESTIGATIONS - DOJ, FBI probes, indictments
+6. STATE POLITICS getting national attention
 
-Focus on US politics only. Find what's ACTUALLY TRENDING on X, not just what news outlets are publishing.
+IMPORTANT: Include the Minnesota/Somali fraud scandal if it's being discussed - this has been a MAJOR trending topic with billions in alleged fraud.
 
-For each trending topic (find 10-12):
-1. The topic/story that's trending (be specific - names, places, numbers)
-2. Why it's trending on X right now (new development, viral post, etc.)
-3. Category: "National Politics", "Washington Briefs", or "State & Local"
+For each story give me:
+1. Specific title (names, dollar amounts, locations)
+2. One sentence on why it's trending
+3. Section: "National Politics", "Washington Briefs", or "State & Local"
 
-Output as JSON only:
-{"stories": [{"title": "...", "description": "Why this is trending on X right now", "section": "..."}]}`,
+Output JSON only:
+{"stories": [{"title": "Minnesota $9 Billion Somali Fraud Scandal", "description": "FBI and DOJ investigating massive welfare fraud", "section": "State & Local"}]}`,
       },
     ],
     3000,
@@ -201,12 +200,32 @@ The article should feel relevant to TODAY even if the underlying story is ongoin
 
 Output as JSON only:
 {
-  "headline": "Compelling headline that captures why this is trending",
+  "headline": "Traditional newspaper headline about the STORY (don't mention X in headline)",
   "subheadline": "Additional context or null",
-  "leadParagraph": "80-100 words explaining the story and why Americans are talking about it",
-  "body": "300-400 words with facts, X quotes with @handles, and context. Use \\n\\n between paragraphs.",
-  "section": "${story.section}"
-}`,
+  "leadParagraph": "80-100 words explaining the story",
+  "body": "300-400 words with facts, X quotes with @handles, context. Use \\n\\n between paragraphs.",
+  "section": "${story.section}",
+  "viralVideos": [
+    {
+      "platform": "x or youtube",
+      "url": "actual URL to the video",
+      "description": "What the video shows",
+      "postedBy": "@handle or channel"
+    }
+  ],
+  "relatedLinks": [
+    {
+      "title": "Article headline",
+      "url": "actual URL",
+      "source": "Star Tribune, Fox News, etc."
+    }
+  ]
+}
+
+IMPORTANT: 
+- Headlines should be traditional newspaper style - about the STORY, not about X
+- Include viral VIDEOS being shared about this story (X videos, YouTube)
+- Include related articles from other news sources`,
       },
     ],
     2500,
@@ -344,6 +363,18 @@ async function generateArticles(): Promise<Article[]> {
           isLeadStory: i === 0 && batchIndex === 0,
           wordCount: countWords(raw.leadParagraph + " " + raw.body),
           storyTopic: story.description, // Keep for phase 3
+          viralVideos: raw.viralVideos?.filter(v => v.url)?.map(v => ({
+            platform: v.platform === "youtube" ? "youtube" : v.platform === "x" ? "x" : "other",
+            url: v.url,
+            description: v.description,
+            postedBy: v.postedBy,
+          })) as Article["viralVideos"],
+          relatedLinks: raw.relatedLinks?.filter(l => l.url)?.map(l => ({
+            title: l.title,
+            url: l.url,
+            source: l.source,
+            stance: "neutral" as const,
+          })) as Article["relatedLinks"],
         }))
         .catch((err) => {
           console.error(`Failed to write article for: ${story.title}`, err);

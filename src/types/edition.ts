@@ -26,6 +26,20 @@ export interface MediaCheck {
   verdict: BiasVerdict;
 }
 
+export interface ViralVideo {
+  platform: "x" | "youtube" | "other";
+  url: string;
+  description: string;
+  postedBy?: string;  // @handle or channel name
+}
+
+export interface RelatedLink {
+  title: string;
+  url: string;
+  source: string;  // "Star Tribune", "Fox News", etc.
+  stance?: "mainstream" | "critical" | "neutral";
+}
+
 export interface Article {
   id: string;
   headline: string;
@@ -40,6 +54,8 @@ export interface Article {
   isLeadStory: boolean;
   wordCount: number;
   mediaWatch?: MediaCheck[];  // Bias checks on other outlets
+  viralVideos?: ViralVideo[];  // Videos being shared about this story
+  relatedLinks?: RelatedLink[];  // Related coverage from other sources
 }
 
 export interface Edition {

@@ -3,6 +3,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Masthead, Footer } from "@/components/newspaper";
 import { MediaWatch } from "@/components/MediaWatch";
+import { ViralContent } from "@/components/ViralContent";
 import { getEdition } from "@/lib/kv";
 import { formatEditionDate } from "@/types/edition";
 
@@ -154,6 +155,16 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
               <p key={idx}>{paragraph}</p>
             ))}
           </div>
+
+          {/* Viral Videos & Related Links */}
+          {(article.viralVideos?.length || article.relatedLinks?.length) && (
+            <div className="not-prose">
+              <ViralContent 
+                videos={article.viralVideos} 
+                links={article.relatedLinks} 
+              />
+            </div>
+          )}
 
           {/* Media Watch - Fact-checking other outlets */}
           {article.mediaWatch && article.mediaWatch.length > 0 && (
