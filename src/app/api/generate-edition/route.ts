@@ -117,26 +117,36 @@ async function getTrendingStories(): Promise<StoryTopic[]> {
     [
       {
         role: "user",
-        content: `What are the top 12 trending US political stories on X/Twitter right now?
+        content: `What are the top 15-18 stories Americans are talking about on X right now?
 
-Search X and news. I want the ACTUAL stories people are talking about, especially:
+Search X/Twitter for what's ACTUALLY trending. I want everything people are buzzing about:
 
-1. FRAUD & SCANDALS - Minnesota Somali fraud, California budget fraud, any federal probes
-2. TRUMP ADMINISTRATION - actions, controversies, statements
-3. IMMIGRATION - ICE raids, deportations, sanctuary city battles  
-4. VIRAL VIDEOS being shared - especially videos exposing fraud, corruption, or hypocrisy
-5. FEDERAL INVESTIGATIONS - DOJ, FBI probes, indictments
-6. STATE POLITICS getting national attention
+POLITICS & GOVERNMENT:
+- Trump administration actions and decisions
+- Congress, legislation, political battles
+- Federal investigations, DOJ/FBI news
+- State politics making national news
 
-IMPORTANT: Include the Minnesota/Somali fraud scandal if it's being discussed - this has been a MAJOR trending topic with billions in alleged fraud.
+ECONOMY & POLICY:
+- Jobs, markets, economic news
+- Immigration policy debates (H1B, border, visas)
+- Trade, tariffs, business news
 
-For each story give me:
-1. Specific title (names, dollar amounts, locations)
+CULTURE & DEBATE:
+- Hot debates on X (tech policy, social issues)
+- Viral moments, videos blowing up
+- Public figures in the news (politicians, business leaders, commentators)
+- Culture war topics people are arguing about
+
+If ONE story is dominating (like a major scandal), give me 2-3 angles on it, then cover OTHER stories too.
+
+For each story:
+1. Specific title with names, numbers, details
 2. One sentence on why it's trending
-3. Section: "National Politics", "Washington Briefs", or "State & Local"
+3. Section: "National Politics", "Washington Briefs", "State & Local", or "Culture"
 
 Output JSON only:
-{"stories": [{"title": "Minnesota $9 Billion Somali Fraud Scandal", "description": "FBI and DOJ investigating massive welfare fraud", "section": "State & Local"}]}`,
+{"stories": [{"title": "...", "description": "...", "section": "..."}]}`,
       },
     ],
     3000,
@@ -173,26 +183,19 @@ async function writeArticle(story: StoryTopic, isLead: boolean): Promise<RawArti
         content: `You are a journalist for The American Standard ("Clear. Fair. American.").
 Today's date is ${today}.
 
-YOUR MISSION: Write articles that RAISE THE PROFILE OF REAL AMERICANS and HOLD GOVERNMENT ACCOUNTABLE.
+WRITING PRINCIPLES:
+1. ACTIONS over STATEMENTS - What did people DO, not just say/tweet
+2. REAL PEOPLE - Quote and credit everyday Americans, not just officials
+3. ACCOUNTABILITY - When government fails, say so. Name names.
+4. CLARITY - Be specific: names, numbers, dates, locations
 
-PRIORITY ORDER FOR SOURCES:
-1. CITIZEN JOURNALISTS & WHISTLEBLOWERS - Who broke this story? Who exposed the truth? (e.g., Nick Shirley exposed the daycare fraud)
-2. EVERYDAY AMERICANS affected by or calling attention to this issue
-3. Government ACTIONS (what they DID or FAILED to do) - NOT their tweets or statements
-4. Official quotes ONLY if they reveal accountability or action
+GOOD: "The FBI launched raids after a viral video exposed empty daycares collecting millions"
+BAD: "Officials expressed concern about the situation"
 
-DO NOT:
-- Lead with "Official X tweeted..."
-- Focus on government PR statements
-- Write like a press release
-- Let officials control the narrative
+GOOD: "Americans on X are furious about the H1B debate, with tech workers demanding answers"  
+BAD: "The policy has generated mixed reactions"
 
-DO:
-- Credit the Americans who exposed the story
-- Ask: Who failed? Who's responsible? What should have been done?
-- Focus on government ACTIONS and INACTION
-- Show how this affects everyday Americans
-- Name names when holding people accountable`,
+Write like a newspaper, not a press release.`,
       },
       {
         role: "user",
@@ -200,21 +203,19 @@ DO:
 
 Context: ${story.description}
 
-ACCOUNTABILITY JOURNALISM:
-1. WHO broke this story or exposed it? Lead with them, not government officials.
-2. What did government DO (or fail to do)? Not what they said/tweeted.
-3. Who is RESPONSIBLE? Name names.
-4. How are EVERYDAY AMERICANS affected?
-
-Example: Instead of "Secretary Noem tweeted about the investigation..."
-Write: "The investigation came only AFTER citizen journalist Nick Shirley exposed the fraud in a viral video, raising questions about why officials failed to act sooner."
+Include:
+1. The key facts - who, what, when, where, specific numbers
+2. How this affects everyday Americans
+3. Multiple perspectives if it's a debate
+4. Government ACTIONS (not just statements)
+5. If someone exposed this story (whistleblower, citizen journalist), credit them
 
 Output as JSON only:
 {
-  "headline": "Headline focusing on accountability or the Americans who exposed it",
+  "headline": "Clear, specific headline",
   "subheadline": "Additional context or null",
-  "leadParagraph": "80-100 words - lead with WHO exposed this or WHO failed, not government PR",
-  "body": "300-400 words of ACCOUNTABILITY journalism. Credit citizen journalists. Question government failures. Use \\n\\n between paragraphs.",
+  "leadParagraph": "80-100 words covering the key facts",
+  "body": "300-400 words with details and context. Use \\n\\n between paragraphs.",
   "section": "${story.section}",
   "viralVideos": [
     {
@@ -449,6 +450,7 @@ function validateSection(section: string): ArticleSection {
     "National Politics",
     "Washington Briefs",
     "State & Local",
+    "Culture",
     "Opinion",
   ];
   return validSections.includes(section as ArticleSection)

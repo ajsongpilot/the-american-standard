@@ -2,6 +2,7 @@ export type ArticleSection =
   | "National Politics"
   | "Washington Briefs"
   | "State & Local"
+  | "Culture"
   | "Opinion";
 
 export type BiasVerdict = 
