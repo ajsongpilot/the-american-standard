@@ -5,6 +5,7 @@ import { Masthead, Footer } from "@/components/newspaper";
 import { MediaWatch } from "@/components/MediaWatch";
 import { ViralContent } from "@/components/ViralContent";
 import { XReactions } from "@/components/XReactions";
+import { FeaturedImage } from "@/components/FeaturedImage";
 import { getEdition } from "@/lib/kv";
 import { formatEditionDate } from "@/types/edition";
 
@@ -149,6 +150,11 @@ export default async function ArticlePage({ params }: ArticlePageProps) {
           <p className="drop-cap text-xl leading-relaxed article-text">
             {article.leadParagraph}
           </p>
+
+          {/* Featured Image with credit */}
+          {article.featuredImage && (
+            <FeaturedImage image={article.featuredImage} />
+          )}
 
           {/* Article body */}
           <div className="article-text mt-6 space-y-5">
