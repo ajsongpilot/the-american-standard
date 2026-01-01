@@ -357,8 +357,8 @@ async function generateArticles(): Promise<Article[]> {
   // PHASE 1: Get trending stories
   const stories = await getTrendingStories();
 
-  // Limit to 8 stories to leave time for media watch (was 10)
-  const storiesToWrite = stories.slice(0, 8);
+  // Write up to 12 stories for good variety
+  const storiesToWrite = stories.slice(0, 12);
 
   // PHASE 2: Write articles in parallel (batches of 3 to avoid rate limits)
   const articles: Article[] = [];
@@ -413,9 +413,9 @@ async function generateArticles(): Promise<Article[]> {
 
   console.log(`Generated ${articles.length} articles, now adding media watch...`);
 
-  // PHASE 3: Add media watch to top 4 articles (most important stories)
-  // Run in parallel batches of 2 to save time
-  const articlesToCheck = articles.slice(0, 4);
+  // PHASE 3: Add media watch to top 3 articles (most important stories)
+  // Run in parallel batches of 3 to save time
+  const articlesToCheck = articles.slice(0, 3);
   
   for (let i = 0; i < articlesToCheck.length; i += 2) {
     const batch = articlesToCheck.slice(i, i + 2);
