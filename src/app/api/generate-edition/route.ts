@@ -215,11 +215,12 @@ CRITICAL RULES:
 2. ACTIONS over PR - What did they DO, not what they said/tweeted
 3. ACCOUNTABILITY - Name names. Who failed? Who's responsible?
 4. IMPACT - Every story must explain why Americans should care
-5. GENERATIONAL TOPICS - When covering issues affecting different generations (Boomers, X, Millennials, Z):
-   - Present ECONOMIC REALITIES, not generational blame
-   - Show different priorities and challenges each generation faces
-   - Use DATA (housing costs, wages, debt, benefits) not stereotypes
-   - Frame as "Americans of different ages" facing different circumstances
+5. GENERATIONAL TOPICS - When covering Boomers, Gen X, Millennials, Gen Z:
+   - Use generation names - they're real, don't sanitize them
+   - Present ECONOMIC REALITIES with DATA (housing costs, wages, debt, benefits)
+   - Explain WHY there's tension without writing hit pieces on any generation
+   - A Boomer should be able to read it and understand the frustration without feeling attacked
+   - Focus on POLICY failures and SYSTEMS, not blaming individuals
 
 BAD (fabricated): "John Smith, a construction worker in Texas, told The American Standard..."
 GOOD (real): "According to Bureau of Labor Statistics data..." or "@realworker posted on X: '...'"`,
