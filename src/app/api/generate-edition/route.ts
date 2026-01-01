@@ -215,6 +215,7 @@ Output as JSON only:
       "handle": "@username",
       "displayName": "Display Name",
       "quote": "Their full post content",
+      "url": "https://x.com/username/status/123456789",
       "verified": true,
       "likes": "12.5K",
       "reposts": "3.2K"
@@ -223,6 +224,7 @@ Output as JSON only:
 }
 
 Find 3-5 real X posts reacting to this story for xReactions.
+IMPORTANT: Include the actual post URL (x.com/user/status/ID) when you can find it.
 Headlines should be traditional newspaper style - about the STORY.`,
       },
     ],
