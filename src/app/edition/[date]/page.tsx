@@ -1,25 +1,43 @@
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 import { Masthead, LeadStory, EditionGrid, Footer } from "@/components/newspaper";
-import { getTodayEdition } from "@/lib/kv";
+import { getEdition } from "@/lib/kv";
 import { Skeleton } from "@/components/ui/skeleton";
-import { GenerateButton } from "@/components/GenerateButton";
-import type { Edition } from "@/types/edition";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 export const runtime = "edge";
 
-async function getEdition(): Promise<Edition | null> {
-  // Try to get today's edition from KV
+interface EditionPageProps {
+  params: Promise<{
+    date: string;
+  }>;
+}
+
+export async function generateMetadata({ params }: EditionPageProps) {
+  const { date } = await params;
+  return {
+    title: `Edition ${date} - The American Standard`,
+    description: `Read The American Standard edition from ${date}`,
+  };
+}
+
+async function getEditionByDate(date: string) {
+  // Validate date format
+  const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!dateRegex.test(date)) {
+    return null;
+  }
+
   try {
-    const edition = await getTodayEdition();
+    const edition = await getEdition(date);
     if (edition) {
       return edition;
     }
   } catch (error) {
     console.log("Error fetching edition:", error);
   }
-  
-  // No edition available - return null instead of sample data
+
   return null;
 }
 
@@ -40,29 +58,13 @@ function LoadingSkeleton() {
   );
 }
 
-async function EditionContent() {
-  const edition = await getEdition();
-  
-  // No edition available - show generate prompt
+async function EditionContent({ date }: { date: string }) {
+  const edition = await getEditionByDate(date);
+
   if (!edition) {
-    return (
-      <>
-        <Masthead date={new Date().toISOString().split("T")[0]} />
-        <main className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
-          <div className="text-center py-16 border-2 border-dashed border-border rounded-lg">
-            <h2 className="text-2xl font-serif font-bold mb-4">No Edition Available</h2>
-            <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              Today&apos;s edition hasn&apos;t been generated yet. Generate fresh content from real-time news.
-            </p>
-            <GenerateButton />
-          </div>
-        </main>
-        <Footer />
-      </>
-    );
+    notFound();
   }
-  
-  // Separate lead story from other articles
+
   const leadStory = edition.articles.find((a) => a.isLeadStory);
   const otherArticles = edition.articles.filter((a) => !a.isLeadStory);
 
@@ -71,6 +73,13 @@ async function EditionContent() {
       <Masthead date={edition.date} />
 
       <main className="max-w-7xl mx-auto px-4 py-8 sm:py-12">
+        {/* Archive notice */}
+        <div className="mb-6 text-center">
+          <Link href="/archives" className="news-link text-sm">
+            ← Back to Archives
+          </Link>
+        </div>
+
         {/* Lead Story */}
         {leadStory && (
           <LeadStory article={leadStory} editionDate={edition.date} />
@@ -85,11 +94,13 @@ async function EditionContent() {
   );
 }
 
-export default function HomePage() {
+export default async function EditionPage({ params }: EditionPageProps) {
+  const { date } = await params;
+  
   return (
     <div className="min-h-screen bg-background">
       <Suspense fallback={<LoadingSkeleton />}>
-        <EditionContent />
+        <EditionContent date={date} />
       </Suspense>
     </div>
   );

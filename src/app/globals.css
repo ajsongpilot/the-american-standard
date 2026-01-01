@@ -1,26 +1,302 @@
 @import "tailwindcss";
+@import "tw-animate-css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+@plugin "@tailwindcss/typography";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Custom fonts */
+@font-face {
+  font-family: 'Playfair Display';
+  font-style: normal;
+  font-weight: 400 900;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/playfairdisplay/v37/nuFvD-vYSZviVYUb_rj3ij__anPXJzDwcbmjWBN2PKdFvXDXbtY.woff2') format('woff2');
+}
+
+@font-face {
+  font-family: 'Source Serif 4';
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+  src: url('https://fonts.gstatic.com/s/sourceserif4/v8/vEFy2_tTDB4M7-auWDN0ahZJW3IX2ih5nk3AucvUHf6OAVIJmeUDygwjihdqrhxXD-wGvjU.woff2') format('woff2');
 }
 
 @theme inline {
+  /* Color palette - newsprint feel with patriotic accents */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  
+  /* Custom newspaper colors */
+  --color-navy: #1e40af;
+  --color-navy-dark: #1e3a8a;
+  --color-red: #dc2626;
+  --color-red-dark: #b91c1c;
+  --color-cream: #faf9f6;
+  --color-newsprint: #f5f4f0;
+  --color-ink: #1a1a1a;
+  --color-rule: #d1d5db;
+  --color-rule-dark: #9ca3af;
+  
+  /* Font families */
+  --font-headline: 'Playfair Display', Georgia, 'Times New Roman', serif;
+  --font-body: 'Source Serif 4', Georgia, 'Times New Roman', serif;
+  --font-sans: system-ui, -apple-system, sans-serif;
   --font-mono: var(--font-geist-mono);
+  
+  /* shadcn mappings */
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+:root {
+  --radius: 0.25rem;
+  --background: #faf9f6;
+  --foreground: #1a1a1a;
+  --card: #ffffff;
+  --card-foreground: #1a1a1a;
+  --popover: #ffffff;
+  --popover-foreground: #1a1a1a;
+  --primary: #1e40af;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f4f0;
+  --secondary-foreground: #1a1a1a;
+  --muted: #f5f4f0;
+  --muted-foreground: #6b7280;
+  --accent: #dc2626;
+  --accent-foreground: #ffffff;
+  --destructive: #dc2626;
+  --border: #d1d5db;
+  --input: #e5e7eb;
+  --ring: #1e40af;
+  --chart-1: #1e40af;
+  --chart-2: #dc2626;
+  --chart-3: #1a1a1a;
+  --chart-4: #6b7280;
+  --chart-5: #d1d5db;
+  --sidebar: #faf9f6;
+  --sidebar-foreground: #1a1a1a;
+  --sidebar-primary: #1e40af;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f4f0;
+  --sidebar-accent-foreground: #1a1a1a;
+  --sidebar-border: #d1d5db;
+  --sidebar-ring: #1e40af;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    font-family: var(--font-body);
+    font-size: 18px;
+    line-height: 1.7;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-headline);
+    font-weight: 700;
+    line-height: 1.2;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Newspaper-specific typography styles */
+@layer components {
+  .font-headline {
+    font-family: var(--font-headline);
+  }
+  
+  .font-body {
+    font-family: var(--font-body);
+  }
+  
+  /* Masthead styling */
+  .masthead-title {
+    font-family: var(--font-headline);
+    font-weight: 900;
+    letter-spacing: -0.02em;
+    color: var(--color-navy);
+  }
+  
+  /* Section headers */
+  .section-header {
+    font-family: var(--font-headline);
+    font-weight: 700;
+    color: var(--color-red);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.875rem;
+    border-bottom: 2px solid var(--color-red);
+    padding-bottom: 0.25rem;
+    margin-bottom: 1rem;
+  }
+  
+  /* Patriotic rule */
+  .patriotic-rule {
+    height: 4px;
+    background: linear-gradient(
+      to right,
+      var(--color-red) 0%,
+      var(--color-red) 33%,
+      #ffffff 33%,
+      #ffffff 67%,
+      var(--color-navy) 67%,
+      var(--color-navy) 100%
+    );
+  }
+  
+  /* Thin rules */
+  .rule-gray {
+    border-top: 1px solid var(--color-rule);
+  }
+  
+  .rule-red {
+    border-top: 1px solid var(--color-red);
+  }
+  
+  /* Byline styling */
+  .byline {
+    font-family: var(--font-body);
+    font-style: italic;
+    color: var(--color-muted-foreground);
+    font-size: 0.875rem;
+  }
+  
+  /* Article text - justified with hyphenation */
+  .article-text {
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+    -ms-hyphens: auto;
+  }
+  
+  /* Drop cap for lead paragraphs */
+  .drop-cap::first-letter {
+    float: left;
+    font-family: var(--font-headline);
+    font-size: 4rem;
+    line-height: 0.8;
+    padding-right: 0.5rem;
+    padding-top: 0.25rem;
+    color: var(--color-navy);
+    font-weight: 700;
+  }
+  
+  /* Link styling */
+  .news-link {
+    color: var(--color-navy);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+  }
+  
+  .news-link:hover {
+    border-bottom-color: var(--color-navy);
+  }
+  
+  /* Grayscale images */
+  .grayscale-subtle {
+    filter: grayscale(30%) contrast(1.05);
+  }
+}
+
+/* Typography plugin customizations */
+@layer utilities {
+  .prose-newspaper {
+    --tw-prose-body: #1a1a1a;
+    --tw-prose-headings: #1a1a1a;
+    --tw-prose-lead: #4b5563;
+    --tw-prose-links: #1e40af;
+    --tw-prose-bold: #1a1a1a;
+    --tw-prose-counters: #6b7280;
+    --tw-prose-bullets: #6b7280;
+    --tw-prose-hr: #d1d5db;
+    --tw-prose-quotes: #1a1a1a;
+    --tw-prose-quote-borders: #dc2626;
+    --tw-prose-captions: #6b7280;
+  }
+  
+  .prose-newspaper p {
+    text-align: justify;
+    hyphens: auto;
+    -webkit-hyphens: auto;
+  }
+  
+  .prose-newspaper blockquote {
+    font-style: italic;
+    border-left-width: 3px;
+    border-left-color: var(--color-red);
+  }
+}
+
+/* Print-like column styling */
+.newspaper-columns {
+  column-gap: 2rem;
+  column-rule: 1px solid var(--color-rule);
+}
+
+@media (min-width: 768px) {
+  .newspaper-columns-2 {
+    column-count: 2;
+  }
+  
+  .newspaper-columns-3 {
+    column-count: 3;
+  }
+}
+
+/* Responsive text sizing for readability */
+@media (min-width: 640px) {
+  body {
+    font-size: 19px;
+  }
+}
+
+@media (min-width: 1024px) {
+  body {
+    font-size: 20px;
+  }
 }
