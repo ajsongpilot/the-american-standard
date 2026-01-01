@@ -610,7 +610,12 @@ export async function GET(request: Request) {
 
   // Allow health check without auth
   if (searchParams.get("health") === "true") {
-    return NextResponse.json({ status: "ok" });
+    return NextResponse.json({ 
+      status: "ok",
+      hasXaiKey: !!process.env.XAI_API_KEY,
+      hasCronSecret: !!process.env.CRON_SECRET,
+      hasRedisUrl: !!process.env.REDIS_URL || !!process.env.KV_REST_API_URL,
+    });
   }
 
   // For manual generation, require auth
