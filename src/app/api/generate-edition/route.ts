@@ -192,6 +192,13 @@ RULES:
 - Names, numbers, specifics
 - If something has millions of views on X, it should be here
 
+NO DUPLICATES - CRITICAL:
+- Each story must have a DIFFERENT ANGLE or be about a DIFFERENT EVENT
+- If covering a big story (like a scandal), give ONE comprehensive entry - don't split into "Part 1" and "Part 2"
+- BAD: "Trump Immigration Crackdown" + "Trump Deportation Plan" (same story, same angle)
+- GOOD: "Trump Immigration Crackdown" + "Texas Governor Deploys Guard" (related but different angle)
+- Before adding a story, check if you already have essentially the same story
+
 For each story:
 1. Specific title with names, numbers
 2. Why it's trending
@@ -522,6 +529,7 @@ interface EditorFix {
 
 interface EditorResponse {
   fixes: EditorFix[];
+  remove: number[];  // Indices of duplicate/weak articles to drop
   issues: string[];
 }
 
@@ -547,9 +555,11 @@ Your job is to catch batch-level issues that individual writers miss:
    - Charlie Kirk died September 2024
    - If unsure about someone, flag for fact-check
 
-3. DUPLICATE ANGLES - Flag if multiple headlines cover the exact same story angle
-   - Different aspects of same story are OK
-   - Same angle twice is not OK
+3. DUPLICATE STORIES - If two articles cover the SAME angle of the SAME story:
+   - Keep the one that's more detailed or is marked as lead
+   - Mark the weaker one for removal
+   - Different aspects of same story are OK (keep both)
+   - Same angle twice = remove the weaker one
 
 Return ONLY JSON:
 {
@@ -561,10 +571,11 @@ Return ONLY JSON:
       "newHeadline": "X Controversy Over Y"
     }
   ],
-  "issues": ["General observations about the batch"]
+  "remove": [7],
+  "issues": ["Removed article 7 - duplicate angle of article 3"]
 }
 
-If no fixes needed, return: {"fixes": [], "issues": []}`,
+If no changes needed, return: {"fixes": [], "remove": [], "issues": []}`,
       },
       {
         role: "user",
@@ -588,10 +599,10 @@ If no fixes needed, return: {"fixes": [], "issues": []}`,
       console.log("Editor notes:", editorResponse.issues);
     }
 
+    // Apply headline fixes first
     if (editorResponse.fixes?.length > 0) {
-      console.log(`Editor making ${editorResponse.fixes.length} fixes:`);
+      console.log(`Editor making ${editorResponse.fixes.length} headline fixes:`);
       
-      // Apply fixes
       for (const fix of editorResponse.fixes) {
         if (fix.index >= 0 && fix.index < articles.length && fix.newHeadline) {
           console.log(`  - Article ${fix.index}: "${fix.issue}"`);
@@ -600,8 +611,27 @@ If no fixes needed, return: {"fixes": [], "issues": []}`,
           articles[fix.index].headline = fix.newHeadline;
         }
       }
-    } else {
-      console.log("Editor review: All headlines approved");
+    }
+
+    // Remove duplicate/weak articles
+    if (editorResponse.remove?.length > 0) {
+      console.log(`Editor removing ${editorResponse.remove.length} duplicate articles:`);
+      
+      // Sort in reverse order so we remove from end first (preserves indices)
+      const indicesToRemove = [...editorResponse.remove].sort((a, b) => b - a);
+      
+      for (const idx of indicesToRemove) {
+        if (idx >= 0 && idx < articles.length) {
+          console.log(`  - Removing article ${idx}: "${articles[idx].headline}"`);
+          articles.splice(idx, 1);
+        }
+      }
+      
+      console.log(`${articles.length} articles remaining after edit`);
+    }
+
+    if (!editorResponse.fixes?.length && !editorResponse.remove?.length) {
+      console.log("Editor review: All articles approved as-is");
     }
 
     return articles;
