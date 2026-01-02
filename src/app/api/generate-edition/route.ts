@@ -192,6 +192,13 @@ RULES:
 - Names, numbers, specifics
 - If something has millions of views on X, it should be here
 
+FRESH NEWS ONLY:
+- Stories must be about what happened in the LAST 48 HOURS
+- If something happened in November, it's NOT news unless there's a NEW development TODAY
+- BAD: "Trump signed X bill in November" (old news)
+- GOOD: "DOJ misses deadline TODAY on Epstein files" (today's development)
+- The DATE in your title/description should be recent (late Dec 2025 or Jan 2026)
+
 NO DUPLICATES - CRITICAL:
 - Each story must have a DIFFERENT ANGLE or be about a DIFFERENT EVENT
 - If covering a big story (like a scandal), give ONE comprehensive entry - don't split into "Part 1" and "Part 2"
@@ -284,10 +291,17 @@ ACCOUNTABILITY FOCUS:
 Context: ${story.description}
 
 STRUCTURE:
-1. leadParagraph: The key facts (who, what, when, specific numbers)
+1. leadParagraph: Start with TODAY's news - what happened in the last 24-48 hours
 2. body: Details, context, government actions/failures
 3. whatItMeansForYou: 2-3 sentences on direct impact to everyday Americans
 4. xReactions: Find the 5 MOST CONTROVERSIAL reactions on X - posts that sparked debate, got people fired up, or show the divide
+
+CRITICAL - LEAD WITH TODAY:
+- Your leadParagraph must start with the LATEST development (today or yesterday)
+- BAD: "On November 19, Trump signed..." (2 months ago = not news)
+- GOOD: "As of January 1, the DOJ has still not released..." (today's status)
+- Historical context goes in the body, NOT the lead
+- If the newest development is more than a week old, this isn't fresh news
 
 Output as JSON only:
 {
