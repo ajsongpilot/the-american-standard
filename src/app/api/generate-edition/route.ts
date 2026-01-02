@@ -154,65 +154,22 @@ async function getTrendingStories(): Promise<StoryTopic[]> {
     [
       {
         role: "user",
-        content: `What are the top 20-25 stories Americans are talking about on X RIGHT NOW?
+        content: `What are the top 20 stories trending on X right now?
 
-CRITICAL: Start with THE #1 HOTTEST TRENDING TOPIC on X. What has the most posts, the most engagement, the most controversy RIGHT NOW? That MUST be the first story.
+Search X for what Americans are actually talking about TODAY. Give me a diverse mix:
+- National Politics (6-8)
+- Washington Briefs (4-5) 
+- The States (3-4)
+- Geopolitics (3-4)
+- Culture (4-5)
 
-Search X/Twitter for what's ACTUALLY trending TODAY:
+First story = THE hottest topic on X right now.
 
-LEAD STORY (1-2):
-- THE single biggest story on X right now - most posts, most engagement
-- If there's a viral scandal, fraud case, or controversy dominating X, this is it
+Each story needs a unique angle - no duplicates.
 
-NATIONAL POLITICS (5-6 stories):
-- Trump administration actions
-- Federal policy, immigration, economy
-- Major political figures
+For each: title (specific, with names), why it's trending, section.
 
-WASHINGTON BRIEFS (4-5 stories):
-- Congress, DOJ, FBI, federal agencies
-- Government scandals, investigations, fraud
-
-THE STATES (3-4 stories):
-- Governors, state scandals
-- Regional stories going national
-
-GEOPOLITICS (3-4 stories):
-- US foreign policy affecting Americans
-- Trade, tariffs, international conflicts
-
-CULTURE (4-5 stories):
-- Hot debates on X (H1B, tech, etc.)
-- Viral moments, videos
-- Generational issues (Boomers vs Millennials economics, etc.)
-
-RULES:
-- FIRST STORY must be THE hottest thing on X right now
-- Include viral videos, citizen journalists, scandals
-- Names, numbers, specifics
-- If something has millions of views on X, it should be here
-
-FRESH NEWS ONLY:
-- Stories must be about what happened in the LAST 48 HOURS
-- If something happened in November, it's NOT news unless there's a NEW development TODAY
-- BAD: "Trump signed X bill in November" (old news)
-- GOOD: "DOJ misses deadline TODAY on Epstein files" (today's development)
-- The DATE in your title/description should be recent (late Dec 2025 or Jan 2026)
-
-NO DUPLICATES - CRITICAL:
-- Each story must have a DIFFERENT ANGLE or be about a DIFFERENT EVENT
-- If covering a big story (like a scandal), give ONE comprehensive entry - don't split into "Part 1" and "Part 2"
-- BAD: "Trump Immigration Crackdown" + "Trump Deportation Plan" (same story, same angle)
-- GOOD: "Trump Immigration Crackdown" + "Texas Governor Deploys Guard" (related but different angle)
-- Before adding a story, check if you already have essentially the same story
-
-For each story:
-1. Specific title with names, numbers
-2. Why it's trending
-3. Section: "National Politics", "Washington Briefs", "The States", "Geopolitics", or "Culture"
-
-Output JSON only:
-{"stories": [{"title": "...", "description": "...", "section": "..."}]}`,
+JSON only: {"stories": [{"title": "...", "description": "...", "section": "..."}]}`,
       },
     ],
     3000,
@@ -247,84 +204,31 @@ async function writeArticle(story: StoryTopic, isLead: boolean): Promise<RawArti
     [
       {
         role: "system",
-        content: `You are a journalist for The American Standard - a populist newspaper that serves THE AMERICAN PEOPLE.
-Today's date is ${today}.
+        content: `You are a journalist for The American Standard. Today: ${today}.
 
-OUR MISSION: American news FOR Americans. We hold the government ACCOUNTABLE to the people who pay their salaries.
-
-JOURNALISM STANDARDS (follow these strictly):
-
-ACCURACY & VERIFICATION:
-- Verify all facts are CURRENT - do not use outdated information
-- Attribute all claims to sources (officials, reports, X posts)
-- If uncertain about a fact, do not include it
-- Verify people referenced are alive and currently active
-
-NO FABRICATION:
-- NEVER invent quotes, sources, or events
-- NEVER attribute statements to people who didn't make them
-- Only use real quotes from X posts or official statements you found
-
-HEADLINE VARIETY:
-- Write headlines that inform, not just inflame
-- VARY your vocabulary - don't use the same dramatic word on multiple headlines
-- Words like "firestorm", "slammed", "sparks outrage" are fine occasionally, but not on every article
-- Mix dramatic headlines with specific factual ones
-- Good variety: "DOJ Misses Epstein Deadline" + "Immigration Ban Sparks Debate" + "Fraud Probe Targets $9B in Losses"
-- Bad (repetitive): "Firestorm Over X" + "Y Ignites Firestorm" + "Z Sparks Firestorm"
-
-BALANCE & CONTEXT:
-- Present multiple perspectives when relevant
-- Explain WHY something matters to readers
-- Provide context (numbers, dates, history)
-- Distinguish between confirmed facts and allegations
-
-ACCOUNTABILITY FOCUS:
-- Name names - who is responsible?
-- Focus on ACTIONS, not just statements
-- Hold government accountable to the people`,
+Write like a real newspaper journalist - professional, factual, varied prose.
+- Never fabricate quotes or sources
+- Hold government accountable - focus on actions, name names
+- Verify facts are current (people alive, events recent)`,
       },
       {
         role: "user",
-        content: `Write a ${isLead ? "500" : "400"}-word article about: ${story.title}
+        content: `Write a ${isLead ? "500" : "400"}-word article: ${story.title}
 
 Context: ${story.description}
 
-STRUCTURE:
-1. leadParagraph: Start with TODAY's news - what happened in the last 24-48 hours
-2. body: Details, context, government actions/failures
-3. whatItMeansForYou: 2-3 sentences on direct impact to everyday Americans
-4. xReactions: Find the 5 MOST CONTROVERSIAL reactions on X - posts that sparked debate, got people fired up, or show the divide
-
-CRITICAL - LEAD WITH TODAY:
-- Your leadParagraph must start with the LATEST development (today or yesterday)
-- BAD: "On November 19, Trump signed..." (2 months ago = not news)
-- GOOD: "As of January 1, the DOJ has still not released..." (today's status)
-- Historical context goes in the body, NOT the lead
-- If the newest development is more than a week old, this isn't fresh news
-
-Output as JSON only:
+JSON output:
 {
-  "headline": "Specific factual headline - NO 'firestorm/sparks/ignites/slammed'",
-  "subheadline": "Additional context or null",
-  "leadParagraph": "80-100 words - the key facts",
-  "body": "250-350 words. Use \\n\\n between paragraphs.",
-  "whatItMeansForYou": "2-3 sentences: How does this affect YOU as an American?",
+  "headline": "Factual headline",
+  "subheadline": "Context or null",
+  "leadParagraph": "80-100 words",
+  "body": "250-350 words with \\n\\n between paragraphs",
+  "whatItMeansForYou": "2-3 sentences on impact to Americans",
   "section": "${story.section}",
-  "xReactions": [
-    {
-      "handle": "@realusername",
-      "displayName": "Display Name", 
-      "quote": "Their controversial/viral post from X",
-      "url": "https://x.com/username/status/123456789",
-      "verified": true,
-      "likes": "12.5K",
-      "reposts": "3.2K"
-    }
-  ]
+  "xReactions": [{"handle": "@user", "displayName": "Name", "quote": "Post", "url": "https://x.com/...", "verified": true, "likes": "10K", "reposts": "2K"}]
 }
 
-For xReactions: Find 5 posts from 5 DIFFERENT VERIFIED users (blue checkmarks). Not the same person multiple times. Get controversial hot takes from notable accounts that show the divide.
+xReactions: 5 different verified users with controversial takes.
 `,
       },
     ],
@@ -557,39 +461,13 @@ async function editorReview(articles: Article[]): Promise<Article[]> {
     [
       {
         role: "system",
-        content: `You are the Editor-in-Chief of The American Standard, reviewing headlines before publication.
+        content: `Editor reviewing headlines. Fix:
+1. Repetitive words (same word 3+ times)
+2. Duplicate stories (same angle = remove weaker)
+3. Dead people referenced as alive
 
-Your job is to catch batch-level issues that individual writers miss:
-
-1. REPETITIVE LANGUAGE - Flag if any dramatic word appears 3+ times across all headlines
-   - Words like: firestorm, slammed, blasted, ignites, sparks outrage, under fire
-   - Suggest alternative headlines that vary the vocabulary
-
-2. DECEASED/OUTDATED REFERENCES - Flag anyone who has died being quoted as currently active
-   - Charlie Kirk died September 2024
-   - If unsure about someone, flag for fact-check
-
-3. DUPLICATE STORIES - If two articles cover the SAME angle of the SAME story:
-   - Keep the one that's more detailed or is marked as lead
-   - Mark the weaker one for removal
-   - Different aspects of same story are OK (keep both)
-   - Same angle twice = remove the weaker one
-
-Return ONLY JSON:
-{
-  "fixes": [
-    {
-      "index": 0,
-      "currentHeadline": "X Firestorm Over Y",
-      "issue": "'Firestorm' used 3 times - vary language",
-      "newHeadline": "X Controversy Over Y"
-    }
-  ],
-  "remove": [7],
-  "issues": ["Removed article 7 - duplicate angle of article 3"]
-}
-
-If no changes needed, return: {"fixes": [], "remove": [], "issues": []}`,
+JSON: {"fixes": [{"index": 0, "issue": "why", "newHeadline": "Better headline"}], "remove": [7], "issues": ["notes"]}
+Empty if OK: {"fixes": [], "remove": [], "issues": []}`,
       },
       {
         role: "user",
