@@ -154,53 +154,47 @@ async function getTrendingStories(): Promise<StoryTopic[]> {
     [
       {
         role: "user",
-        content: `What are the top 25-30 stories Americans are talking about on X right now?
+        content: `What are the top 20-25 stories Americans are talking about on X RIGHT NOW?
 
-Search X/Twitter for what's ACTUALLY trending. Give me stories across these sections:
+CRITICAL: Start with THE #1 HOTTEST TRENDING TOPIC on X. What has the most posts, the most engagement, the most controversy RIGHT NOW? That MUST be the first story.
 
-NATIONAL POLITICS (6-8 stories):
-- Trump administration actions and decisions
-- Federal policy - immigration, economy, trade
-- Major political figures and controversies
+Search X/Twitter for what's ACTUALLY trending TODAY:
 
-WASHINGTON BRIEFS (5-6 stories):
-- Congress, legislation, hearings, votes
-- DOJ, FBI, federal agency actions
-- Government scandals, investigations
+LEAD STORY (1-2):
+- THE single biggest story on X right now - most posts, most engagement
+- If there's a viral scandal, fraud case, or controversy dominating X, this is it
 
-THE STATES (4-5 stories):
-- Governors making national news
-- State laws, court cases, scandals
-- Regional stories getting attention
+NATIONAL POLITICS (5-6 stories):
+- Trump administration actions
+- Federal policy, immigration, economy
+- Major political figures
 
-GEOPOLITICS (4-5 stories):
+WASHINGTON BRIEFS (4-5 stories):
+- Congress, DOJ, FBI, federal agencies
+- Government scandals, investigations, fraud
+
+THE STATES (3-4 stories):
+- Governors, state scandals
+- Regional stories going national
+
+GEOPOLITICS (3-4 stories):
 - US foreign policy affecting Americans
-- Trade wars, tariffs, sanctions
-- Military actions, international conflicts
-- Immigration from specific countries
-- Anything abroad that impacts American jobs, prices, or security
+- Trade, tariffs, international conflicts
 
-CULTURE (6-8 stories):
-- Hot debates on X (tech workers vs H1B, etc.)
-- Viral moments, videos blowing up
-- Public figures clashing
-- Culture war topics people are arguing about
-- GENERATIONAL ISSUES: Economic realities facing Boomers, Gen X, Millennials, Gen Z
-  * Social Security/Medicare sustainability
-  * Housing affordability across generations
-  * Job market access, wages, career mobility
-  * Student debt, cost of living comparisons
-  * Wealth distribution by age
-  * Frame as "different priorities" not generational blame
+CULTURE (4-5 stories):
+- Hot debates on X (H1B, tech, etc.)
+- Viral moments, videos
+- Generational issues (Boomers vs Millennials economics, etc.)
 
 RULES:
-- Max 2-3 articles on any single news event
-- Include PEOPLE - names, handles, personalities
-- Focus on what impacts AMERICANS
+- FIRST STORY must be THE hottest thing on X right now
+- Include viral videos, citizen journalists, scandals
+- Names, numbers, specifics
+- If something has millions of views on X, it should be here
 
 For each story:
-1. Specific title with names, numbers, details
-2. One sentence on why it's trending
+1. Specific title with names, numbers
+2. Why it's trending
 3. Section: "National Politics", "Washington Briefs", "The States", "Geopolitics", or "Culture"
 
 Output JSON only:
@@ -244,12 +238,37 @@ Today's date is ${today}.
 
 OUR MISSION: American news FOR Americans. We hold the government ACCOUNTABLE to the people who pay their salaries.
 
-CRITICAL RULES:
-1. NEVER FABRICATE QUOTES - Only use real quotes you find from X posts or official statements
-2. ACTIONS over PR - What did they DO, not what they said/tweeted
-3. ACCOUNTABILITY - Name names. Who failed? Who's responsible?
-4. IMPACT - Every story must explain why Americans should care
-5. GENERATIONAL TOPICS - Use real generation names (Boomers, Gen X, Millennials, Gen Z), present economic realities with data, focus on policy failures not blame`,
+JOURNALISM STANDARDS (follow these strictly):
+
+ACCURACY & VERIFICATION:
+- Verify all facts are CURRENT - do not use outdated information
+- Attribute all claims to sources (officials, reports, X posts)
+- If uncertain about a fact, do not include it
+- Verify people referenced are alive and currently active
+
+NO FABRICATION:
+- NEVER invent quotes, sources, or events
+- NEVER attribute statements to people who didn't make them
+- Only use real quotes from X posts or official statements you found
+
+HEADLINE VARIETY:
+- Write headlines that inform, not just inflame
+- VARY your vocabulary - don't use the same dramatic word on multiple headlines
+- Words like "firestorm", "slammed", "sparks outrage" are fine occasionally, but not on every article
+- Mix dramatic headlines with specific factual ones
+- Good variety: "DOJ Misses Epstein Deadline" + "Immigration Ban Sparks Debate" + "Fraud Probe Targets $9B in Losses"
+- Bad (repetitive): "Firestorm Over X" + "Y Ignites Firestorm" + "Z Sparks Firestorm"
+
+BALANCE & CONTEXT:
+- Present multiple perspectives when relevant
+- Explain WHY something matters to readers
+- Provide context (numbers, dates, history)
+- Distinguish between confirmed facts and allegations
+
+ACCOUNTABILITY FOCUS:
+- Name names - who is responsible?
+- Focus on ACTIONS, not just statements
+- Hold government accountable to the people`,
       },
       {
         role: "user",
@@ -265,7 +284,7 @@ STRUCTURE:
 
 Output as JSON only:
 {
-  "headline": "Clear, specific headline",
+  "headline": "Specific factual headline - NO 'firestorm/sparks/ignites/slammed'",
   "subheadline": "Additional context or null",
   "leadParagraph": "80-100 words - the key facts",
   "body": "250-350 words. Use \\n\\n between paragraphs.",
