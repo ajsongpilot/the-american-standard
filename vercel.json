@@ -1,11 +1,5 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "crons": [
-    {
-      "path": "/api/generate-edition",
-      "schedule": "0 9 * * *"
-    }
-  ],
   "headers": [
     {
       "source": "/manifest.json",
