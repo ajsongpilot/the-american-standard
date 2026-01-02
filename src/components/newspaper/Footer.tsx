@@ -34,7 +34,7 @@ export function Footer() {
             The American Standard
           </p>
           <p className="text-xs tracking-[0.2em] uppercase text-muted-foreground mt-1">
-            Clear. Fair. American.
+            The 5 Stories You Need to Know
           </p>
         </div>
 
