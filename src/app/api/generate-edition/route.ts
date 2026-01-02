@@ -499,13 +499,116 @@ async function generateArticles(): Promise<Article[]> {
   }
   */
 
+  // PHASE 3: EDITOR REVIEW
+  // Single cheap API call to review all headlines for issues
+  console.log("Starting Phase 3: Editor Review...");
+  const editedArticles = await editorReview(articles);
+
   // Clean up temporary storyTopic field
-  const cleanedArticles = articles.map(({ ...article }) => {
+  const cleanedArticles = editedArticles.map(({ ...article }) => {
     const { storyTopic, ...clean } = article as Article & { storyTopic?: string };
     return clean;
   });
 
   return cleanedArticles;
+}
+
+interface EditorFix {
+  index: number;
+  currentHeadline: string;
+  issue: string;
+  newHeadline: string;
+}
+
+interface EditorResponse {
+  fixes: EditorFix[];
+  issues: string[];
+}
+
+async function editorReview(articles: Article[]): Promise<Article[]> {
+  // Build a summary of all headlines for the editor to review
+  const headlineList = articles
+    .map((a, i) => `${i}. [${a.section}] ${a.headline}`)
+    .join("\n");
+
+  const response = await callGrokBasic(
+    [
+      {
+        role: "system",
+        content: `You are the Editor-in-Chief of The American Standard, reviewing headlines before publication.
+
+Your job is to catch batch-level issues that individual writers miss:
+
+1. REPETITIVE LANGUAGE - Flag if any dramatic word appears 3+ times across all headlines
+   - Words like: firestorm, slammed, blasted, ignites, sparks outrage, under fire
+   - Suggest alternative headlines that vary the vocabulary
+
+2. DECEASED/OUTDATED REFERENCES - Flag anyone who has died being quoted as currently active
+   - Charlie Kirk died September 2024
+   - If unsure about someone, flag for fact-check
+
+3. DUPLICATE ANGLES - Flag if multiple headlines cover the exact same story angle
+   - Different aspects of same story are OK
+   - Same angle twice is not OK
+
+Return ONLY JSON:
+{
+  "fixes": [
+    {
+      "index": 0,
+      "currentHeadline": "X Firestorm Over Y",
+      "issue": "'Firestorm' used 3 times - vary language",
+      "newHeadline": "X Controversy Over Y"
+    }
+  ],
+  "issues": ["General observations about the batch"]
+}
+
+If no fixes needed, return: {"fixes": [], "issues": []}`,
+      },
+      {
+        role: "user",
+        content: `Review these ${articles.length} headlines for publication:\n\n${headlineList}`,
+      },
+    ],
+    2000,
+    0.3
+  );
+
+  const jsonMatch = response.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) {
+    console.log("Editor review: No JSON response, keeping original headlines");
+    return articles;
+  }
+
+  try {
+    const editorResponse = JSON.parse(jsonMatch[0]) as EditorResponse;
+    
+    if (editorResponse.issues?.length > 0) {
+      console.log("Editor notes:", editorResponse.issues);
+    }
+
+    if (editorResponse.fixes?.length > 0) {
+      console.log(`Editor making ${editorResponse.fixes.length} fixes:`);
+      
+      // Apply fixes
+      for (const fix of editorResponse.fixes) {
+        if (fix.index >= 0 && fix.index < articles.length && fix.newHeadline) {
+          console.log(`  - Article ${fix.index}: "${fix.issue}"`);
+          console.log(`    Before: ${articles[fix.index].headline}`);
+          console.log(`    After: ${fix.newHeadline}`);
+          articles[fix.index].headline = fix.newHeadline;
+        }
+      }
+    } else {
+      console.log("Editor review: All headlines approved");
+    }
+
+    return articles;
+  } catch (err) {
+    console.error("Editor review parse error:", err);
+    return articles;
+  }
 }
 
 function validateSection(section: string): ArticleSection {
