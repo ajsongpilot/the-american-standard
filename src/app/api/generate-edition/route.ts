@@ -154,11 +154,20 @@ async function getTrendingStories(): Promise<StoryTopic[]> {
     [
       {
         role: "user",
-        content: `What are the TOP 5 stories Americans are talking about on X right now?
+        content: `What are the top 20 stories trending on X right now?
 
-Search X for what's actually trending TODAY. Give me the 5 most important stories - the ones everyone should know about.
+Search X for what Americans are actually talking about TODAY. Give me a diverse mix:
+- National Politics (6-8)
+- Washington Briefs (4-5) 
+- The States (3-4)
+- Geopolitics (3-4)
+- Culture (4-5)
 
-For each: title (specific, with names), why it's trending, section (National Politics, Washington Briefs, The States, Geopolitics, or Culture).
+First story = THE hottest topic on X right now.
+
+Each story needs a unique angle - no duplicates.
+
+For each: title (specific, with names), why it's trending, section.
 
 JSON only: {"stories": [{"title": "...", "description": "...", "section": "..."}]}`,
       },
@@ -337,8 +346,8 @@ async function generateArticles(): Promise<Article[]> {
   // PHASE 1: Get trending stories
   const stories = await getTrendingStories();
 
-  // Top 5 stories only - focused, not endless
-  const storiesToWrite = stories.slice(0, 5);
+  // Write up to 15 stories (balance coverage vs API cost)
+  const storiesToWrite = stories.slice(0, 15);
 
   // PHASE 2: Write articles in parallel (batches of 5 to balance speed and rate limits)
   const articles: Article[] = [];
