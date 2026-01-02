@@ -18,7 +18,7 @@ export function Masthead({ date }: MastheadProps) {
       <div className="max-w-7xl mx-auto px-4 py-6 sm:py-8 text-center">
         {/* Tagline above */}
         <p className="text-xs sm:text-sm tracking-[0.25em] uppercase text-muted-foreground mb-2">
-          The 5 Stories You Need to Know
+          Clear. Fair. American.
         </p>
 
         {/* Main title */}
@@ -29,11 +29,6 @@ export function Masthead({ date }: MastheadProps) {
         {/* Date */}
         <p className="font-body text-base sm:text-lg text-foreground/80">
           {formattedDate}
-        </p>
-        
-        {/* Value prop */}
-        <p className="font-body text-sm text-muted-foreground mt-2 max-w-md mx-auto">
-          Stay informed in 5 minutes. No endless scrolling.
         </p>
       </div>
 

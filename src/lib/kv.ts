@@ -26,6 +26,13 @@ const storage = {
       localStore.set(key, value);
     }
   },
+  async del(key: string): Promise<void> {
+    if (isKVConfigured) {
+      await kv.del(key);
+    } else {
+      localStore.delete(key);
+    }
+  },
   async exists(key: string): Promise<number> {
     if (isKVConfigured) {
       return kv.exists(key);
@@ -156,6 +163,69 @@ export async function editionExists(date: string): Promise<boolean> {
     return exists > 0;
   } catch (error) {
     console.error(`Error checking edition existence for ${date}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Delete an entire edition
+ */
+export async function deleteEdition(date: string): Promise<boolean> {
+  try {
+    const key = getEditionKey(date);
+    await storage.del(key);
+    
+    // Remove from index
+    const index = await storage.get<EditionSummary[]>(EDITIONS_INDEX_KEY);
+    if (index) {
+      const filtered = index.filter((e) => e.date !== date);
+      await storage.set(EDITIONS_INDEX_KEY, filtered);
+    }
+    
+    // If this was the latest, find the new latest
+    const latestDate = await storage.get<string>(LATEST_EDITION_KEY);
+    if (latestDate === date) {
+      const newIndex = await storage.get<EditionSummary[]>(EDITIONS_INDEX_KEY);
+      if (newIndex && newIndex.length > 0) {
+        await storage.set(LATEST_EDITION_KEY, newIndex[0].date);
+      }
+    }
+    
+    console.log(`Edition ${date} deleted`);
+    return true;
+  } catch (error) {
+    console.error(`Error deleting edition ${date}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Delete a single article from an edition
+ */
+export async function deleteArticle(date: string, articleId: string): Promise<boolean> {
+  try {
+    const edition = await getEdition(date);
+    if (!edition) {
+      return false;
+    }
+    
+    const originalCount = edition.articles.length;
+    edition.articles = edition.articles.filter((a) => a.id !== articleId);
+    
+    if (edition.articles.length === originalCount) {
+      return false; // Article not found
+    }
+    
+    // If we deleted the lead story, promote the first article
+    if (!edition.articles.some((a) => a.isLeadStory) && edition.articles.length > 0) {
+      edition.articles[0].isLeadStory = true;
+    }
+    
+    await saveEdition(edition);
+    console.log(`Article ${articleId} deleted from edition ${date}`);
+    return true;
+  } catch (error) {
+    console.error(`Error deleting article ${articleId} from ${date}:`, error);
     return false;
   }
 }
